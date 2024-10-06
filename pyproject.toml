@@ -18,3 +18,6 @@ pytauri_demo = { workspace = true }
 # https://docs.astral.sh/uv/concepts/workspaces/
 [tool.uv.workspace]
 members = ["python/*", "example"]
+
+[tool.pyright]
+typeCheckingMode = "strict"

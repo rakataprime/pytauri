@@ -7,12 +7,13 @@
             "purpose": [
                 "debug-in-terminal"
             ],
-            "request": "launch",
-            "program": "${file}",
             "console": "integratedTerminal",
-            "args": [],
+            "request": "launch",
+            "module": "pytauri_demo", // your module name
+            "args": [], // whatever you want
             "env": {
                 "VSCODE_RUST_DEBUG": "${input:rustDebug}",
+                // keep the following environment variables in sync with `.vscode/settings.json`
                 "VSCODE_LLDB_RPC_SERVER_HOST": "127.0.0.1",
                 "VSCODE_LLDB_RPC_SERVER_PORT": "9552",
                 "VSCODE_LLDB_RPC_SERVER_TOKEN": "secret",

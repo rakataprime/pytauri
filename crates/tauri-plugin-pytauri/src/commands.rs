@@ -25,17 +25,17 @@ fn invoke_pyfunc(request: Request) -> anyhow::Result<Response> {
     let header = request.headers();
     let func_name = header
         .get(PYFUNC_HEADER_KEY)
-        .ok_or_else(|| anyhow!("There is no {PYFUNC_HEADER_KEY} header."))
+        .ok_or_else(|| anyhow!("There is no {PYFUNC_HEADER_KEY} header"))
         .context(format!("{header:?}"))?
         .to_str()
         .context("Only support visible ASCII chars")?;
 
     let py_func = match PY_INVOKE_HANDLERS.try_get(func_name) {
         TryResult::Present(py_func) => py_func,
-        TryResult::Absent => return Err(anyhow!("The pyfunction `{func_name}` is not registered.")),
+        TryResult::Absent => return Err(anyhow!("The pyfunction `{func_name}` is not registered")),
         TryResult::Locked => {
             return Err(anyhow!(
-                "The `PY_INVOKE_HANDLERS` is locked, please try later."
+                "The `PY_INVOKE_HANDLERS` is locked, please try later"
             ))
         }
     };

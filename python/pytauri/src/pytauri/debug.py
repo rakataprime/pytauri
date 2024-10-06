@@ -53,7 +53,8 @@ def _get_lldb_rpc_server_cfg() -> _LldbRpcServerCfg:
 
 
 def debug():
-    if not getenv(VSCODE_RUST_DEBUG_VARNAME):
+    vscode_rust_debug = getenv(VSCODE_RUST_DEBUG_VARNAME)
+    if vscode_rust_debug != "1":
         return
 
     _logger.info(f"'{VSCODE_RUST_DEBUG_VARNAME}' is set, enabling rust debug mode")
@@ -65,11 +66,18 @@ def debug():
     token = lldb_rpc_server_cfg["token"]
 
     token_data = f"token: {token}" if token else ""
+    # See: <https://github.com/vadimcn/codelldb/blob/v1.10.0/MANUAL.md#rpc-server>
+    # Line-oriented YAML Syntax: <https://github.com/vadimcn/codelldb/blob/v1.10.0/MANUAL.md#debugging-externally-launched-code>
+    # Arg: <https://github.com/vadimcn/codelldb/blob/v1.10.0/MANUAL.md#attaching-to-a-running-process>
     rpc_data = dedent(f"""\
         name: "rust.debug"
         type: "lldb"
         request: "attach"
         pid: {getpid()}
+        sourceLanguages:
+            - rust
+            - c
+            - cpp
         {token_data}
     """)
 
