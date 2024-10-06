@@ -1,0 +1,20 @@
+[project]
+name = "pytauri-workspace"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.9"
+
+[tool.uv]
+dev-dependencies = [
+    "setuptools>=64",
+    "setuptools-scm>=8",
+    "setuptools-rust",
+    "pytauri-demo",
+]
+
+[tool.uv.sources]
+pytauri_demo = { workspace = true }
+
+# https://docs.astral.sh/uv/concepts/workspaces/
+[tool.uv.workspace]
+members = ["python/*", "example"]

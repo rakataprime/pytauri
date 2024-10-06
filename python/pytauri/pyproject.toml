@@ -1,0 +1,14 @@
+[project]
+name = "pytauri"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pydantic >= 2",
+    "pydantic-core",          # `pydantic` will specify its version
+    "typing-extensions >= 4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

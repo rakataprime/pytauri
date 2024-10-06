@@ -1,0 +1,16 @@
+{
+  "name": "tauri-plugin-pytauri-api",
+  "version": "0.1.0",
+  "description": "",
+  "exports": "./src/index.ts",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4"
+  }
+}

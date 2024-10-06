@@ -1,0 +1,33 @@
+[workspace]
+members = ["crates/*", "example"]
+resolver = "2"
+
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+rust-version = "1.81"
+
+
+[workspace.dependencies]
+pyo3 = { version = "0.22" }
+
+tauri = { version = "2" }
+tauri-build = { version = "2" }
+tauri-plugin = { version = "2", features = ["build"] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+
+anyhow = { version = "1" }
+dashmap = { version = "6" }
+
+tempfile = { version = "3" }
+
+tracing = { version = "0.1" }
+
+tauri-plugin-pytauri = { path = "crates/tauri-plugin-pytauri" }
+
+[profile.release]
+lto = "thin"

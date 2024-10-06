@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8", "setuptools-rust"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytauri-demo"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dynamic = ["version"]
+
+dependencies = [
+    "pydantic >= 2",
+    "pydantic-core",          # `pydantic` will specify its version
+    "typing-extensions >= 4",
+    "pytauri",
+]
+
+[tool.uv.sources]
+pytauri = { workspace = true }
+
+[tool.setuptools_scm]
+fallback_version = "0.1.0"
+root = ".."                # The demo is sub-directory of the workspace, and `.git` is at `../.git`
+
+[tool.setuptools.packages]
+# Pure Python packages/modules
+find = { where = ["python"] }
+
+[[tool.setuptools-rust.ext-modules]]
+# Private Rust extension module to be nested into the Python package.
+# The last part of the name (e.g. "_ext_mod") has to match `lib.name` in Cargo.toml.
+target = "pytauri_demo._ext_mod"
+features = ["pyo3/extension-module", "tauri/custom-protocol"]
+
+[project.entry-points.pytauri]
+# keep the same as `target` in `tool.setuptools-rust.ext-modules` section
+ext_mod = "pytauri_demo._ext_mod"

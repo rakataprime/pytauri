@@ -1,0 +1,19 @@
+[package]
+name = "tauri-plugin-pytauri"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+links = "tauri-plugin-pytauri"
+
+[dependencies]
+tauri = { workspace = true }
+
+pyo3 = { workspace = true }
+
+anyhow = { workspace = true }
+
+dashmap = { workspace = true }
+
+[build-dependencies]
+tauri-plugin = { workspace = true }

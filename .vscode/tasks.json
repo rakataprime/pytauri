@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    // "options": {
+    //     "env": {
+    //         "PYO3_PYTHON": "${command:python.interpreterPath}",
+    //         "PYO3_PRINT_CONFIG": "1",
+    //     }
+    // },
+    "tasks": [
+        {
+            "label": "maturin.dev",
+            "type": "shell",
+            "command": "maturin dev --uv",
+            "problemMatcher": [
+                "$rustc"
+            ],
+        },
+        {
+            "label": "stub_gen",
+            "type": "shell",
+            "command": "cargo run --bin stub_gen",
+            "problemMatcher": [
+                "$rustc"
+            ],
+        },
+        {
+            "label": "dev",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "maturin.dev",
+                "stub_gen"
+            ]
+        },
+    ]
+}
