@@ -4,20 +4,48 @@ use pyo3::prelude::*;
 use tauri::plugin::{Builder, TauriPlugin};
 use tauri::Runtime;
 
-const PLUGIN_NAME: &str = "pytauri";
+fn get_last_segment(path: &str) -> &str {
+    let segments: Vec<&str> = path.split("::").collect();
+    segments.last().expect("failed to get the last segment")
+}
+
+macro_rules! get_last_segment {
+    ($path:path) => {{
+        {
+            #[expect(unused_imports)]
+            // just for IDE intellisense
+            use $path as _;
+        }
+        get_last_segment(stringify!($path))
+    }};
+}
+
+#[pymodule(submodule)]
+pub mod pytauri {
+    use super::*;
+
+    #[pymodule_export]
+    use commands::py_invoke_handler;
+}
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    Builder::new(PLUGIN_NAME)
+    Builder::new(get_last_segment!(pytauri))
         .invoke_handler(tauri::generate_handler![commands::pyfunc])
         .build()
 }
 
-pub fn register_pyo3_module(parent_module: &Bound<'_, PyModule>) -> PyResult<&'static str> {
-    let self_module = PyModule::new_bound(parent_module.py(), PLUGIN_NAME)?;
-    self_module.add_function(wrap_pyfunction_bound!(
-        commands::py_invoke_handler,
-        &self_module
-    )?)?;
-    parent_module.add_submodule(&self_module)?;
-    Ok(PLUGIN_NAME)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod foo {
+        /// The name of the module.
+        pub(crate) const NAME: &str = "foo";
+    }
+
+    #[test]
+    fn test_get_last_segment() {
+        assert_eq!(get_last_segment!(foo), foo::NAME);
+        assert_eq!(get_last_segment!(self::foo), foo::NAME);
+    }
 }

@@ -20,9 +20,6 @@ mod _ext_mod {
         super::run()
     }
 
-    #[pymodule_init]
-    fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
-        pytauri::register_pyo3_module(m)?;
-        Ok(())
-    }
+    #[pymodule_export]
+    use pytauri::pytauri;
 }

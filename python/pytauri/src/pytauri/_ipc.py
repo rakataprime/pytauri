@@ -6,10 +6,10 @@ from functools import wraps
 from pydantic import BaseModel
 
 from pytauri.ffi import (
-    py_invoke_handler as rusty_py_invoke_handler,
-    _HandlerArgType as _RawHandlerArgType,  # pyright: ignore[reportPrivateUsage]
-    _HandlerReturnType as _RawHandlerReturnType,  # pyright: ignore[reportPrivateUsage]
-    _HandlerType as _RawHandlerType,  # pyright: ignore[reportPrivateUsage]
+    raw_invoke_handler,
+    _RawHandlerArgType,  # pyright: ignore[reportPrivateUsage]
+    _RawHandlerReturnType,  # pyright: ignore[reportPrivateUsage]
+    _RawHandlerType,  # pyright: ignore[reportPrivateUsage]
 )
 
 __all__ = ["py_invoke_handler"]
@@ -88,7 +88,7 @@ def _py_invoke_handler_decorator(
 ) -> _NamedPyHandlerType[_PyHandlerArgTypeVar]:
     name = func.__name__
     raw_handler = _py_to_raw_handler_wrapper(func)
-    rusty_py_invoke_handler(name, raw_handler)
+    raw_invoke_handler(name, raw_handler)
     return func
 
 
@@ -120,11 +120,11 @@ class py_invoke_handler(Generic[_PyHandlerArgTypeVar]):
         if func_name is None:
             return _py_invoke_handler_decorator
 
-        def decorator(
+        def _decorator(
             func: _PyHandlerType[_PyHandlerArgTypeVar], /
         ) -> _PyHandlerType[_PyHandlerArgTypeVar]:
             raw_handler = _py_to_raw_handler_wrapper(func)
-            rusty_py_invoke_handler(func_name, raw_handler)
+            raw_invoke_handler(func_name, raw_handler)
             return func
 
-        return decorator
+        return _decorator
