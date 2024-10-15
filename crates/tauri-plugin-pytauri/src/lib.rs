@@ -2,7 +2,23 @@ mod commands;
 
 use pyo3::prelude::*;
 use tauri::plugin::{Builder, TauriPlugin};
-use tauri::Runtime;
+use tauri::Wry;
+
+#[pyclass]
+#[non_exhaustive]
+pub struct AppHandle {
+    pub inner: tauri::AppHandle,
+}
+
+#[pymodule(submodule)]
+pub mod pytauri {
+    use super::*;
+
+    #[pymodule_export]
+    use crate::AppHandle;
+    #[pymodule_export]
+    use commands::py_invoke_handler;
+}
 
 fn get_last_segment(path: &str) -> &str {
     let segments: Vec<&str> = path.split("::").collect();
@@ -20,15 +36,7 @@ macro_rules! get_last_segment {
     }};
 }
 
-#[pymodule(submodule)]
-pub mod pytauri {
-    use super::*;
-
-    #[pymodule_export]
-    use commands::py_invoke_handler;
-}
-
-pub fn init<R: Runtime>() -> TauriPlugin<R> {
+pub fn init() -> TauriPlugin<Wry> {
     Builder::new(get_last_segment!(pytauri))
         .invoke_handler(tauri::generate_handler![commands::pyfunc])
         .build()

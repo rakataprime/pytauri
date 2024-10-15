@@ -1,23 +1,35 @@
-from importlib.metadata import entry_points
-from typing import Protocol, Union
+from typing import Protocol, Union, TYPE_CHECKING
 from types import ModuleType
 
-__all__ = ["raw_invoke_handler", "EXT_MOD"]
+# See: <https://pypi.org/project/backports.entry-points-selectable/>
+# and: <https://docs.python.org/3/library/importlib.metadata.html#entry-points>
+# Deprecated: once we no longer support versions Python 3.9, we can remove this dependency.
+from importlib_metadata import (
+    entry_points,  # pyright: ignore[reportUnknownVariableType]
+    EntryPoint,
+)
+
+__all__ = ["raw_invoke_handler", "EXT_MOD", "AppHandle"]
 
 
 def _load_ext_mod() -> ModuleType:
-    eps = entry_points(group="pytauri", name="ext_mod")
+    eps: tuple[EntryPoint, ...] = tuple(entry_points(group="pytauri", name="ext_mod"))
     if len(eps) != 1:
+        msg_list: list[tuple[str, str]] = []
+        for ep in eps:
+            # See: <https://packaging.python.org/en/latest/specifications/core-metadata/#core-metadata>
+            # for more attributes of `dist`.
+            name = ep.dist.name if ep.dist else "UNKNOWN"
+            ep = repr(ep)
+            msg_list.append((name, ep))
+
+        prefix = "\n    - "
+        msg = prefix.join(f"{name}: {ep}" for name, ep in msg_list)
         raise RuntimeError(
-            f"Exactly one `pytauri` entry point is expected, but got {eps!r}"
+            f"Exactly one `pytauri` entry point is expected, but got:{prefix}{msg}"
         )
 
-    # See: https://docs.python.org/3/library/importlib.metadata.html#entry-points
-    # Changed in version 3.13: EntryPoint objects no longer present a tuple-like interface (__getitem__()).
-    # If use `eps[0]` directly, pyright will raise an error:
-    #   error: Argument of type "Literal[0]" cannot be assigned to parameter "name" of type "str" in function "__getitem__"
-    (ext_mod_ep,) = eps
-    ext_mod = ext_mod_ep.load()
+    ext_mod = eps[0].load()
     assert isinstance(ext_mod, ModuleType)
 
     return ext_mod
@@ -39,6 +51,12 @@ EXT_MOD = _load_ext_mod()
 
 _pytauri_mod = _load_pytauri_mod(EXT_MOD)
 
+if TYPE_CHECKING:
+
+    class AppHandle: ...
+else:
+    AppHandle = _pytauri_mod.AppHandle
+
 
 _RawHandlerArgType = bytearray
 # from `Vec<u8>`. See https://pyo3.rs/v0.22.2/conversions/tables#argument-types
@@ -46,7 +64,9 @@ _RawHandlerReturnType = Union[bytes, bytearray]
 
 
 class _RawHandlerType(Protocol):
-    def __call__(self, arg: _RawHandlerArgType, /) -> _RawHandlerReturnType: ...
+    def __call__(
+        self, arg: _RawHandlerArgType, /, *, app_handle: AppHandle
+    ) -> _RawHandlerReturnType: ...
 
 
 class _RawInvokeHandlerType(Protocol):

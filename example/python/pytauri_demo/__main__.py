@@ -1,7 +1,7 @@
 from typing import Callable
 
 from pydantic import BaseModel
-from pytauri import py_invoke_handler
+from pytauri import py_invoke_handler, AppHandle
 from pytauri.debug import debug
 
 from pytauri_demo._ext_mod import run  # pyright: ignore[reportUnknownVariableType]
@@ -18,7 +18,7 @@ class Greeting(BaseModel):
 
 
 @py_invoke_handler()
-def greet(person: Person) -> Greeting:
+def greet(person: Person, app_handle: AppHandle) -> Greeting:
     return Greeting(message=f"Hello, {person.name}!")
 
 

@@ -21,3 +21,4 @@ members = ["python/*", "example"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
+pythonVersion = "3.9"

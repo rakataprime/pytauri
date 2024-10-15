@@ -7,6 +7,10 @@ dependencies = [
     "pydantic >= 2",
     "pydantic-core",          # `pydantic` will specify its version
     "typing-extensions >= 4",
+    # See: <https://pypi.org/project/backports.entry-points-selectable/>
+    # and: <https://docs.python.org/3/library/importlib.metadata.html#entry-points>
+    # Deprecated: once we no longer support versions Python 3.9, we can remove this dependency.
+    "importlib-metadata >= 3.6"
 ]
 
 [build-system]

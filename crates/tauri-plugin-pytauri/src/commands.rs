@@ -5,13 +5,14 @@ use anyhow::{anyhow, Context};
 use pyo3::exceptions as py_exceptions;
 use pyo3::prelude::*;
 use pyo3::types as py_types;
+use pyo3::types::IntoPyDict as _;
 use tauri::ipc::{InvokeBody, Request, Response};
 
 const PYFUNC_HEADER_KEY: &str = "pyfunc";
 
 static PY_INVOKE_HANDLERS: LazyLock<DashMap<String, Py<PyAny>>> = LazyLock::new(DashMap::new);
 
-fn invoke_pyfunc(request: Request) -> anyhow::Result<Response> {
+fn invoke_pyfunc(request: Request, app_handle: tauri::AppHandle) -> anyhow::Result<Response> {
     use dashmap::try_result::TryResult;
 
     let body = match request.body() {
@@ -68,10 +69,20 @@ fn invoke_pyfunc(request: Request) -> anyhow::Result<Response> {
     */
 
     let invoke_return: anyhow::Result<Vec<u8>> = Python::with_gil(|py| {
+        let app_handle_py = crate::AppHandle { inner: app_handle };
+
         let func_arg = py_types::PyByteArray::new_bound(py, body);
+        // TODO, XXX (performance): we create a new PyObject `app_handle_py` every time, which is not efficient;
+        // if we can prove that the `app_handle` is singleton, we can cache it(i.g. PyObject).
+        // We should create a issue to `tauri`.
+        //
+        // TODO, XXX (performance): maybe we can cache this `PyDict`, something like `Vec<(PyFunc, PyDict)>`,
+        // and determine whether to create `PyClass`(e.g. `app_handle`) by the `PyDict`'s key.
+        let func_kwargs = [("app_handle", app_handle_py.into_py(py))].into_py_dict_bound(py);
+
         let invoke_return = py_func
             .bind(py)
-            .call1((func_arg,))
+            .call((func_arg,), Some(&func_kwargs))
             .context("Failed to call the python function")?
             // [`Response`] only accepts [`Vec<u8>`] as input,
             .extract::<Vec<u8>>()
@@ -83,8 +94,8 @@ fn invoke_pyfunc(request: Request) -> anyhow::Result<Response> {
 }
 
 #[tauri::command]
-pub(crate) fn pyfunc(request: Request) -> Result<Response, String> {
-    invoke_pyfunc(request)
+pub(crate) fn pyfunc(request: Request, app_handle: tauri::AppHandle) -> Result<Response, String> {
+    invoke_pyfunc(request, app_handle)
         // use `debug` format to display backtrace
         .map_err(|err| format!("{err:?}"))
 }
