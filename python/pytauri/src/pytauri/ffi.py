@@ -14,7 +14,9 @@ __all__ = ["raw_invoke_handler", "EXT_MOD", "AppHandle"]
 
 def _load_ext_mod() -> ModuleType:
     eps: tuple[EntryPoint, ...] = tuple(entry_points(group="pytauri", name="ext_mod"))
-    if len(eps) != 1:
+    if len(eps) == 0:
+        raise RuntimeError("No `pytauri` entry point is found")
+    elif len(eps) > 1:
         msg_list: list[tuple[str, str]] = []
         for ep in eps:
             # See: <https://packaging.python.org/en/latest/specifications/core-metadata/#core-metadata>

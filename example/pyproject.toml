@@ -16,11 +16,14 @@ dependencies = [
     "pydantic >= 2",
     "pydantic-core",          # `pydantic` will specify its version
     "typing-extensions >= 4",
+    # workspace dependencies
     "pytauri",
+    "pytauri-plugin-notification",
 ]
 
 [tool.uv.sources]
 pytauri = { workspace = true }
+pytauri-plugin-notification = { workspace = true }
 
 [tool.setuptools_scm]
 # See: <https://setuptools-scm.readthedocs.io/en/stable/config/>

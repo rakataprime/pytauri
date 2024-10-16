@@ -47,7 +47,7 @@ def _py_to_raw_handler_wrapper(
     if issubclass(return_annotation, BaseModel):
         deserializer = return_annotation.__pydantic_serializer__.to_json
 
-    # TODO, XXX(typing): I don't know how to fix this typing error
+    # TODO, XXX, FIXME(typing): I don't know how to fix this typing error
     @wraps(raw_handler)  # pyright: ignore[reportArgumentType]
     def wrapper(
         arg: _RawHandlerArgType, /, *, app_handle: AppHandle

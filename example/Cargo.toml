@@ -25,5 +25,8 @@ anyhow = { workspace = true }
 
 tauri-plugin-pytauri = { workspace = true }
 
+tauri-plugin-notification = { workspace = true }
+pytauri-plugin-notification = { workspace = true }
+
 [build-dependencies]
 tauri-build = { workspace = true }

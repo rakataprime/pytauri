@@ -17,6 +17,8 @@ tauri = { version = "2",  features = ["wry"]}
 tauri-build = { version = "2" }
 tauri-plugin = { version = "2", features = ["build"] }
 
+tauri-plugin-notification = {version = "2"}
+
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 
@@ -28,6 +30,7 @@ tempfile = { version = "3" }
 tracing = { version = "0.1" }
 
 tauri-plugin-pytauri = { path = "crates/tauri-plugin-pytauri" }
+pytauri-plugin-notification = { path = "crates/pytauri-plugin-notification" }
 
 [profile.release]
 lto = "thin"

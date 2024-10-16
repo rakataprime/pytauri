@@ -1,10 +1,10 @@
 use pyo3::prelude::*;
-use tauri_plugin_pytauri as pytauri;
 
 fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(pytauri::init())
+        .plugin(tauri_plugin_pytauri::init())
+        .plugin(tauri_plugin_notification::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -21,5 +21,8 @@ mod _ext_mod {
     }
 
     #[pymodule_export]
-    use pytauri::pytauri;
+    use tauri_plugin_pytauri::pytauri;
+
+    #[pymodule_export]
+    use pytauri_plugin_notification::notification;
 }

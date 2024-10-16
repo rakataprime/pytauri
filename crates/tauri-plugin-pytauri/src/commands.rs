@@ -69,7 +69,7 @@ fn invoke_pyfunc(request: Request, app_handle: tauri::AppHandle) -> anyhow::Resu
     */
 
     let invoke_return: anyhow::Result<Vec<u8>> = Python::with_gil(|py| {
-        let app_handle_py = crate::AppHandle { inner: app_handle };
+        let app_handle_py = crate::AppHandle(app_handle);
 
         let func_arg = py_types::PyByteArray::new_bound(py, body);
         // TODO, XXX (performance): we create a new PyObject `app_handle_py` every time, which is not efficient;
@@ -93,8 +93,13 @@ fn invoke_pyfunc(request: Request, app_handle: tauri::AppHandle) -> anyhow::Resu
     Ok(Response::new(invoke_return?))
 }
 
+// FIXME, TODO: If use `async`, it seems deadlock because of
+// `pyo3::ffi::Py_IsInitialized()` when `Python::with_gil`
 #[tauri::command]
-pub(crate) fn pyfunc(request: Request, app_handle: tauri::AppHandle) -> Result<Response, String> {
+pub(crate) fn pyfunc(
+    request: Request<'_>,
+    app_handle: tauri::AppHandle,
+) -> Result<Response, String> {
     invoke_pyfunc(request, app_handle)
         // use `debug` format to display backtrace
         .map_err(|err| format!("{err:?}"))

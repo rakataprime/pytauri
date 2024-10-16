@@ -2,20 +2,19 @@ mod commands;
 
 use pyo3::prelude::*;
 use tauri::plugin::{Builder, TauriPlugin};
-use tauri::Wry;
 
-#[pyclass]
+pub type Runtime = tauri::Wry;
+
+#[pyclass(frozen)]
 #[non_exhaustive]
-pub struct AppHandle {
-    pub inner: tauri::AppHandle,
-}
+pub struct AppHandle(pub tauri::AppHandle);
 
 #[pymodule(submodule)]
 pub mod pytauri {
     use super::*;
 
     #[pymodule_export]
-    use crate::AppHandle;
+    pub use crate::AppHandle;
     #[pymodule_export]
     use commands::py_invoke_handler;
 }
@@ -36,7 +35,7 @@ macro_rules! get_last_segment {
     }};
 }
 
-pub fn init() -> TauriPlugin<Wry> {
+pub fn init() -> TauriPlugin<Runtime> {
     Builder::new(get_last_segment!(pytauri))
         .invoke_handler(tauri::generate_handler![commands::pyfunc])
         .build()

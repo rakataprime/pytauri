@@ -9,6 +9,7 @@ resolution-markers = [
 members = [
     "pytauri",
     "pytauri-demo",
+    "pytauri-plugin-notification",
     "pytauri-workspace",
 ]
 
@@ -164,12 +165,13 @@ requires-dist = [
 
 [[package]]
 name = "pytauri-demo"
-version = "0.1.dev3+g5018fee.d20241015"
+version = "0.1.dev4+g34022a1.d20241015"
 source = { editable = "example" }
 dependencies = [
     { name = "pydantic" },
     { name = "pydantic-core" },
     { name = "pytauri" },
+    { name = "pytauri-plugin-notification" },
     { name = "typing-extensions" },
 ]
 
@@ -178,8 +180,20 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2" },
     { name = "pydantic-core" },
     { name = "pytauri", editable = "python/pytauri" },
+    { name = "pytauri-plugin-notification", editable = "python/pytauri-plugin-notification" },
     { name = "typing-extensions", specifier = ">=4" },
 ]
+
+[[package]]
+name = "pytauri-plugin-notification"
+version = "0.1.0"
+source = { editable = "python/pytauri-plugin-notification" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "typing-extensions", specifier = ">=4" }]
 
 [[package]]
 name = "pytauri-workspace"
