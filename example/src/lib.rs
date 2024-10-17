@@ -16,8 +16,8 @@ mod _ext_mod {
 
     /// Run the tauri application.
     #[pyfunction]
-    fn run() {
-        super::run()
+    fn run(py: Python<'_>) {
+        py.allow_threads(super::run);
     }
 
     #[pymodule_export]

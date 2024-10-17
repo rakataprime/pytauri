@@ -39,19 +39,21 @@ impl NotificationBuilder {
         self_
     }
 
-    fn show(&self) -> PyResult<()> {
-        let app_handle = &self._app_handle.get().0;
-        let mut builder = app_handle.notification().builder();
+    fn show(&self, py: Python<'_>) -> PyResult<()> {
+        py.allow_threads(|| {
+            let app_handle = &self._app_handle.get().0;
+            let mut builder = app_handle.notification().builder();
 
-        if let Some(title) = &self.title {
-            builder = builder.title(title);
-        }
-        if let Some(body) = &self.body {
-            builder = builder.body(body);
-        }
+            if let Some(title) = &self.title {
+                builder = builder.title(title);
+            }
+            if let Some(body) = &self.body {
+                builder = builder.body(body);
+            }
 
-        builder.show().map_err(PluginError)?;
-        Ok(())
+            builder.show().map_err(PluginError)?;
+            Ok(())
+        })
     }
 }
 
