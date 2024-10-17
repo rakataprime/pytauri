@@ -111,6 +111,11 @@ pnpm install
 # build frontend assets
 pnpm -r run build
 
+# virtual environment
+uv venv
+source .venv/bin/activate  # bash/zsh
+# or powershell: .venv\Scripts\Activate.ps1
+
 uv pip install setuptools setuptools-rust setuptools-scm
 # install demo
 uv sync \
