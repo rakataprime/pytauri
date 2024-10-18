@@ -72,11 +72,11 @@ fn invoke_pyfunc(request: Request, app_handle: tauri::AppHandle) -> anyhow::Resu
 
     let invoke_return: anyhow::Result<Vec<u8>> = Python::with_gil(|py| {
         let func_arg = py_types::PyByteArray::new_bound(py, body);
-        // TODO, XXX (performance): we create a new PyObject `app_handle_py` every time, which is not efficient;
+        // TODO, XXX (perf): we create a new PyObject `app_handle_py` every time, which is not efficient;
         // if we can prove that the `app_handle` is singleton, we can cache it(i.g. PyObject).
         // We should create a issue to `tauri`.
         //
-        // TODO, XXX (performance): maybe we can cache this `PyDict`, something like `Vec<(PyFunc, PyDict)>`,
+        // TODO, XXX (perf): maybe we can cache this `PyDict`, something like `Vec<(PyFunc, PyDict)>`,
         // and determine whether to create `PyClass`(e.g. `app_handle`) by the `PyDict`'s key.
         let func_kwargs = [("app_handle", app_handle_py.into_py(py))].into_py_dict_bound(py);
 
@@ -93,7 +93,7 @@ fn invoke_pyfunc(request: Request, app_handle: tauri::AppHandle) -> anyhow::Resu
     Ok(Response::new(invoke_return?))
 }
 
-// TODO, XXX(performance): natively support async python function.
+// TODO, XXX(perf): natively support async python function.
 #[tauri::command]
 pub(crate) async fn pyfunc(
     request: Request<'_>,
@@ -106,11 +106,7 @@ pub(crate) async fn pyfunc(
 
 /// Register a python function to be called from Rust.
 #[pyfunction]
-pub(crate) fn py_invoke_handler(
-    py: Python<'_>,
-    func_name: String,
-    py_func: Bound<'_, PyAny>,
-) -> PyResult<()> {
+pub(crate) fn py_invoke_handler(func_name: String, py_func: Bound<'_, PyAny>) -> PyResult<()> {
     use dashmap::Entry;
     use py_exceptions::{PyRuntimeError, PyValueError};
 
@@ -121,7 +117,9 @@ pub(crate) fn py_invoke_handler(
     }
     let py_unbind = py_func.unbind();
 
-    py.allow_threads(move || {
+    // TODO (perf): I don't know if we need to use `py.allow_threads` here,
+    // inserting a new entry into the `DashMap` seems to be a short operation.
+    {
         let entry = PY_INVOKE_HANDLERS
             .try_entry(func_name)
             .ok_or(PyRuntimeError::new_err(
@@ -138,5 +136,5 @@ pub(crate) fn py_invoke_handler(
         };
 
         Ok(())
-    })
+    }
 }

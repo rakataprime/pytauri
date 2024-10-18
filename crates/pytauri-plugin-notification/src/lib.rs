@@ -1,7 +1,8 @@
+use pyo3::exceptions;
 use pyo3::prelude::*;
 use tauri_plugin_notification as plugin;
 use tauri_plugin_notification::NotificationExt as _;
-use tauri_plugin_pytauri::pytauri;
+use tauri_plugin_pytauri::{pytauri, Runtime};
 
 struct PluginError(plugin::Error);
 
@@ -22,41 +23,67 @@ impl From<plugin::Error> for PluginError {
 #[pyclass]
 #[non_exhaustive]
 struct NotificationBuilder {
-    _app_handle: Py<pytauri::AppHandle>,
-    title: Option<String>,
-    body: Option<String>,
+    _inner: Option<plugin::NotificationBuilder<Runtime>>,
+}
+
+impl NotificationBuilder {
+    const fn new(inner: plugin::NotificationBuilder<Runtime>) -> Self {
+        Self {
+            _inner: Some(inner),
+        }
+    }
+
+    /// Take the inner `NotificationBuilder` from `self_`,
+    /// if `NotificationBuilder` is already consumed, return `PyRuntimeError`.
+
+    // NOTE: `#[inline]` is important:
+    // This function essentially acts as a macro to reduce repetitive code in `pymethods`.
+    // We need to inline it to inform the compiler of our changes to `self._inner`,
+    // so that subsequent operations on `self._inner` can be optimized.
+    #[inline]
+    fn _inner(&mut self) -> PyResult<plugin::NotificationBuilder<Runtime>> {
+        self._inner.take().ok_or_else(|| {
+            exceptions::PyRuntimeError::new_err("NotificationBuilder is already consumed")
+        })
+    }
 }
 
 #[pymethods]
 impl NotificationBuilder {
-    fn title(mut self_: PyRefMut<'_, Self>, title: String) -> PyRefMut<'_, Self> {
-        self_.title = Some(title);
-        self_
+    fn title(mut self_: PyRefMut<'_, Self>, title: String) -> PyResult<PyRefMut<'_, Self>> {
+        let builder = self_._inner()?.title(title);
+        let _ = self_._inner.insert(builder);
+        Ok(self_)
     }
 
-    fn body(mut self_: PyRefMut<'_, Self>, body: String) -> PyRefMut<'_, Self> {
-        self_.body = Some(body);
-        self_
+    fn body(mut self_: PyRefMut<'_, Self>, body: String) -> PyResult<PyRefMut<'_, Self>> {
+        let builder = self_._inner()?.body(body);
+        let _ = self_._inner.insert(builder);
+        Ok(self_)
     }
 
-    fn show(&self, py: Python<'_>) -> PyResult<()> {
+    fn show(&mut self, py: Python<'_>) -> PyResult<()> {
+        // TODO (perf): Do we really need `py.allow_threads` here?
+        // I mean, I don't know how long `NotificationBuilder::show` will take,
+        // maybe it's short enough?
         py.allow_threads(|| {
-            let app_handle = &self._app_handle.get().0;
-            let mut builder = app_handle.notification().builder();
+            self._inner()?.show().map_err(PluginError)?;
 
-            if let Some(title) = &self.title {
-                builder = builder.title(title);
-            }
-            if let Some(body) = &self.body {
-                builder = builder.body(body);
-            }
-
-            builder.show().map_err(PluginError)?;
             Ok(())
         })
     }
 }
 
+// TODO(perf): we can't use struct `Notification` directly
+//
+// - Because `app_handle.notification()` returns `&Notification`,
+//   however pyclass doesn't allow borrowing (i.g, ownership required).
+//
+//   > We should create a issue to `tauri` for `Notification.clone()`.
+//
+// - And, `Notification` is private, maybe is tauri's mistake.
+//
+//   > create a issue to `tauri` to make `Notification` public.
 #[pyclass(frozen)]
 #[non_exhaustive]
 struct Notification {
@@ -65,13 +92,12 @@ struct Notification {
 
 #[pymethods]
 impl Notification {
-    fn builder(&self, py: Python<'_>) -> NotificationBuilder {
-        let _app_handle = self.app_handle.bind(py).clone().unbind();
-        NotificationBuilder {
-            _app_handle,
-            title: None,
-            body: None,
-        }
+    fn builder(&self) -> NotificationBuilder {
+        // NOTE: this function is simple enough,
+        // so we don't need to use `py.allow_threads`
+
+        let builder = self.app_handle.get().0.notification().builder();
+        NotificationBuilder::new(builder)
     }
 }
 
