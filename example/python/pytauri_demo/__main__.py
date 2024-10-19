@@ -1,8 +1,8 @@
 from typing import Callable
 
+from codelldb import debug
 from pydantic import BaseModel
 from pytauri import py_invoke_handler, AppHandle
-from pytauri.debug import debug
 from pytauri_plugin_notification import NotificationExt
 
 from pytauri_demo._ext_mod import run  # pyright: ignore[reportUnknownVariableType]

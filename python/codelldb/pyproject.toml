@@ -1,0 +1,13 @@
+[project]
+name = "codelldb"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.9"
+
+# NOTE: DO NOT use third-party libraries in this file,
+# keep the minimal dependencies.
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

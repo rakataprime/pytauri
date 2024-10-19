@@ -19,11 +19,13 @@ dependencies = [
     # workspace dependencies
     "pytauri",
     "pytauri-plugin-notification",
+    "codelldb",
 ]
 
 [tool.uv.sources]
 pytauri = { workspace = true }
 pytauri-plugin-notification = { workspace = true }
+codelldb = { workspace = true }
 
 [tool.setuptools_scm]
 # See: <https://setuptools-scm.readthedocs.io/en/stable/config/>
