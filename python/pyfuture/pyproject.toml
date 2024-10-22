@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyfuture"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = ["anyio >= 4", "exceptiongroup >= 1", "typing-extensions >= 4"]
+
+[tool.uv]
+dev-dependencies = [
+    # testing
+    "pytest == 8.*",
+    "anyio[trio] >= 4",
+]

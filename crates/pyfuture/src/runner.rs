@@ -32,7 +32,7 @@ enum RunnerInner {
 }
 
 #[derive(Debug)]
-#[pyclass]
+#[pyclass(weakref)]
 pub struct Runner(RunnerInner);
 
 #[pymethods]

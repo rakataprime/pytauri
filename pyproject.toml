@@ -6,14 +6,20 @@ requires-python = ">=3.9"
 
 [tool.uv]
 dev-dependencies = [
-    "setuptools>=64",
+    "setuptools>=64",    # 64 for `setuptools-rust`
     "setuptools-scm>=8",
     "setuptools-rust",
+    # testing
+    "pytest == 8.*",
+    "anyio[trio] >= 4",
+    # workspace members
     "pytauri-demo",
+    "pyfuture",
 ]
 
 [tool.uv.sources]
 pytauri_demo = { workspace = true }
+pyfuture = { workspace = true }
 
 # https://docs.astral.sh/uv/concepts/workspaces/
 [tool.uv.workspace]
