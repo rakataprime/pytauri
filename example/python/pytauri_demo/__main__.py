@@ -2,7 +2,7 @@ from codelldb import debug
 from pydantic import BaseModel
 from pytauri import Commands, AppHandle, Runner, build_app, RunEvent
 from pytauri_plugin_notification import NotificationExt
-from pyfuture import RunnerBuilder
+from pyfuture import RunnerBuilder, create_runner_builder
 
 commands: Commands = Commands()
 
@@ -32,7 +32,7 @@ def async_main() -> None:
         async with RunnerBuilder() as runner_builder:
             app = build_app(runner_builder.build(Runner), commands)
 
-            def callback(_app_handle: AppHandle, _run_event: RunEvent):
+            def callback(_app_handle: AppHandle, _run_event: RunEvent) -> None:
                 pass
 
             while True:
@@ -44,6 +44,17 @@ def async_main() -> None:
     asyncio.run(_async_main())
 
 
+def sync_main() -> None:
+    backend = "asyncio"  # or `trio`
+    with create_runner_builder(backend) as runner_builder:
+        app = build_app(runner_builder.build(Runner), commands)
+
+        def callback(_app_handle: AppHandle, _run_event: RunEvent) -> None:
+            pass
+
+        app.run(callback)
+
+
 if __name__ == "__main__":
     debug()
-    async_main()
+    sync_main()  # or `async_main()`

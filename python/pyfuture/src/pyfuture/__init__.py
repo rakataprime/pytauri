@@ -1,5 +1,13 @@
-from typing import Protocol, Any, Type, Generic, Optional, Awaitable
-from contextlib import AsyncExitStack
+from typing import (
+    Protocol,
+    Any,
+    Type,
+    Generic,
+    Optional,
+    Awaitable,
+    Generator,
+)
+from contextlib import AsyncExitStack, contextmanager
 from threading import get_ident
 from collections import deque
 from weakref import ref, ReferenceType
@@ -7,11 +15,11 @@ from types import TracebackType
 
 from exceptiongroup import BaseExceptionGroup
 from typing_extensions import Self, TypeVar
-from anyio.from_thread import BlockingPortal
+from anyio.from_thread import BlockingPortal, start_blocking_portal
 from anyio import create_task_group, CancelScope, get_cancelled_exc_class
 from anyio.abc import TaskGroup
 
-__all__ = ["RunnerBuilder"]
+__all__ = ["RunnerBuilder", "create_runner_builder"]
 
 T = TypeVar("T", infer_variance=True)
 
@@ -49,6 +57,7 @@ class _RunnerStack(Generic[_RunnerTypeVar]):
         return self
 
     def push(self, runner: _RunnerTypeVar) -> None:
+        """NOTE: this method can be call thread-safely."""
         self._runner_stack.append(ref(runner))
 
     # Implementing reference:
@@ -187,6 +196,11 @@ class RunnerBuilder:
         self._exit_stack = AsyncExitStack()
 
     async def __aenter__(self) -> Self:
+        """Note: The context manager is not re-enterable."""
+
+        # NOTE: init `_event_loop_thread_id` and so on in `__aenter__` method,
+        # instead of `__init__` method,
+        # so that we can require calling `__aenter__` before `build`.
         self._event_loop_thread_id = get_ident()
         self._cancelled_exc_class = get_cancelled_exc_class()
 
@@ -203,6 +217,7 @@ class RunnerBuilder:
         return await self._exit_stack.__aexit__(*exc_info)
 
     def build(self, runner_cls: Type[_RunnerTypeVar]) -> _RunnerTypeVar:
+        """NOTE: this method can be call thread-safely."""
         py_runner = _PyRunner(
             self._blocking_portal,
             self._task_group,
@@ -213,3 +228,19 @@ class RunnerBuilder:
         runner = runner_cls(py_runner)
         self._runner_stack.push(runner)
         return runner
+
+
+@contextmanager
+def create_runner_builder(
+    backend: str = "asyncio", backend_options: Optional[dict[str, Any]] = None
+) -> Generator[RunnerBuilder, Any, None]:
+    """Launch an async event in another thread, and create a `RunnerBuilder` in it.
+
+    Note: DO NOT aenter the `RunnerBuilder` again, this function already do it for you.
+    """
+    with start_blocking_portal(
+        backend=backend, backend_options=backend_options
+    ) as portal:
+        builder = portal.call(RunnerBuilder)
+        with portal.wrap_async_context_manager(builder) as builder:
+            yield builder
