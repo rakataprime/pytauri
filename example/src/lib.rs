@@ -9,10 +9,9 @@ mod _ext_mod {
     use pytauri_plugin_notification::notification;
 
     #[pymodule_init]
-    fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
-        // let context_builder = || Ok(tauri::generate_context!());
+    fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
         tauri_plugin_pytauri::pymodule_export(
-            m,
+            module,
             |_kwargs| {
                 let builder = tauri::Builder::default()
                     .plugin(tauri_plugin_shell::init())
