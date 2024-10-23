@@ -4,7 +4,7 @@ from pytauri import Commands, AppHandle, Runner, build_app, RunEvent
 from pytauri_plugin_notification import NotificationExt
 from pyfuture import RunnerBuilder
 
-commands = Commands()
+commands: Commands = Commands()
 
 
 class Person(BaseModel):
@@ -24,7 +24,7 @@ async def greet(person: Person, app_handle: AppHandle) -> Greeting:
     return Greeting(message=f"Hello, {person.name}!")
 
 
-def async_main():
+def async_main() -> None:
     # or `trio` or `anyio`
     import asyncio
 

@@ -22,6 +22,7 @@
     ![demo](https://github.com/user-attachments/assets/14ad5b51-b333-4d80-b04b-af72c4179571)
 
 - Natively support async python (`asyncio`, `trio` or `anyio`)
+- **100%** [Type Completeness](https://microsoft.github.io/pyright/#/typed-libraries?id=type-completeness)
 - Ergonomic API (and as close as possible to the Tauri Rust API)
 
     - Python

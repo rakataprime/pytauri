@@ -52,7 +52,7 @@ def _get_lldb_rpc_server_cfg() -> _LldbRpcServerCfg:
     return _LldbRpcServerCfg(host=host, port=port, token=token)
 
 
-def debug():
+def debug() -> None:
     vscode_rust_debug = getenv(VSCODE_RUST_DEBUG_VARNAME)
     if vscode_rust_debug != "1":
         return

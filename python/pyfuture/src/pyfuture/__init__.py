@@ -20,9 +20,9 @@ class _PyFutureProto(Protocol, Generic[T]):
     @property
     def awaitable(self) -> Awaitable[T]: ...
 
-    def set_result(self, result: Any, /): ...
+    def set_result(self, result: Any, /) -> None: ...
 
-    def set_exception(self, exception: BaseException, /): ...
+    def set_exception(self, exception: BaseException, /) -> None: ...
 
 
 class _CancelHandleProto(Protocol):
@@ -36,9 +36,8 @@ class _PyRunnerProto(Protocol):
 class _RunnerProto(Protocol):
     def __new__(cls, py_runner: _PyRunnerProto, /) -> Self: ...
 
-    def close(self) -> None: ...
-
-    "Must call this method when `py_runner` is unavailable."
+    def close(self) -> None:
+        """Must call this method when `py_runner` is unavailable."""
 
 
 _RunnerTypeVar = TypeVar("_RunnerTypeVar", bound=_RunnerProto)
