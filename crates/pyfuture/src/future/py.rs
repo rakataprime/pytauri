@@ -2,7 +2,7 @@ use std::task::Waker;
 
 use pyo3::prelude::*;
 
-#[pyclass]
+#[pyclass(subclass)]
 pub struct PyFuture {
     #[pyo3(get)]
     awaitable: PyObject,

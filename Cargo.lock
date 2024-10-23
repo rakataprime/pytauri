@@ -3790,6 +3790,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dashmap",
+ "pyfuture",
  "pyo3",
  "tauri",
  "tauri-plugin",

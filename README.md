@@ -21,14 +21,18 @@
 
     ![demo](https://github.com/user-attachments/assets/14ad5b51-b333-4d80-b04b-af72c4179571)
 
+- Natively support async python (`asyncio`, `trio` or `anyio`)
 - Ergonomic API (and as close as possible to the Tauri Rust API)
 
     - Python
 
         ```python
         from pydantic import BaseModel
-        from pytauri import py_invoke_handler, AppHandle
+        from pytauri import AppHandle, Commands
         from pytauri_plugin_notification import NotificationExt
+
+        commands = Commands()
+
 
         class Person(BaseModel):
             name: str
@@ -38,8 +42,8 @@
             message: str
 
 
-        @py_invoke_handler()
-        def greet(person: Person, app_handle: AppHandle) -> Greeting:
+        @commands.invoke_handler()
+        async def greet(person: Person, app_handle: AppHandle) -> Greeting:
             notification_ext = NotificationExt(app_handle)
             notification = notification_ext.notification()
             notification.builder().title("Greeting").body(f"Hello, {person.name}!").show()

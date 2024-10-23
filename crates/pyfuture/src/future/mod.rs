@@ -13,7 +13,7 @@ pub use py::PyFuture;
 pub use rust::{RustFuture, CancelOnDrop};
 
 #[derive(Debug)]
-pub struct AllowThreads<F>(F);
+pub struct AllowThreads<F>(pub F);
 
 impl<F> Future for AllowThreads<F>
 where

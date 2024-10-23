@@ -10,6 +10,7 @@ links = "tauri-plugin-pytauri"
 tauri = { workspace = true }
 
 pyo3 = { workspace = true }
+pyfuture = { workspace = true }
 
 anyhow = { workspace = true }
 

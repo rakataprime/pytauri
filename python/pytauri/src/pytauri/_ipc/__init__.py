@@ -4,6 +4,7 @@ from typing import (
     Any,
     overload,
     cast,
+    final,
 )
 from inspect import signature
 from functools import wraps
@@ -11,8 +12,8 @@ from functools import wraps
 from typing_extensions import TypeVar, TypedDict
 from pydantic import BaseModel
 
+from pytauri import ffi
 from pytauri.ffi import (
-    raw_invoke_handler,
     _RawHandlerArgType,  # pyright: ignore[reportPrivateUsage]
     _RawHandlerReturnType,  # pyright: ignore[reportPrivateUsage]
     _RawHandlerType,  # pyright: ignore[reportPrivateUsage]
@@ -23,7 +24,8 @@ from pytauri._ipc._types import (
     PyHandlerArgTypeVar,
 )
 
-__all__ = ["py_invoke_handler", "AppHandle"]
+
+__all__ = ["Commands"]
 
 
 class _PyHandlerKwargs(TypedDict, total=False):
@@ -49,7 +51,7 @@ def _py_to_raw_handler_wrapper(
 
     # TODO, XXX, FIXME(typing): I don't know how to fix this typing error
     @wraps(raw_handler)  # pyright: ignore[reportArgumentType]
-    def wrapper(
+    async def wrapper(
         arg: _RawHandlerArgType, /, *, app_handle: AppHandle
     ) -> _RawHandlerReturnType:
         nonlocal serializer, deserializer
@@ -65,7 +67,7 @@ def _py_to_raw_handler_wrapper(
         bound_arguments = handler_signature.bind(arg_, **kwargs_)
 
         # 2. Call the raw handler
-        raw_return = raw_handler(*bound_arguments.args, **bound_arguments.kwargs)
+        raw_return = await raw_handler(*bound_arguments.args, **bound_arguments.kwargs)
 
         # 3. Process the return value
         if deserializer is not None:
@@ -80,36 +82,49 @@ def _py_to_raw_handler_wrapper(
     return wrapper
 
 
-def _py_invoke_handler_decorator(
-    func: PyHandlerTypes[PyHandlerArgTypeVar],
-) -> PyHandlerTypes[PyHandlerArgTypeVar]:
-    name = func.__name__
-    raw_handler = _py_to_raw_handler_wrapper(func)
-    raw_invoke_handler(name, raw_handler)
-    return func
-
-
 _DecoratableTypeVar = TypeVar("_DecoratableTypeVar", bound=Callable[..., Any])
 _DecoratorGeneric = Callable[[_DecoratableTypeVar], _DecoratableTypeVar]
 
 
-@overload
-def py_invoke_handler() -> _DecoratorGeneric[PyHandlerTypes[PyHandlerArgTypeVar]]: ...
-@overload
-def py_invoke_handler(
-    func_name: str, /
-) -> _DecoratorGeneric[PyHandlerTypes[PyHandlerArgTypeVar]]: ...
-def py_invoke_handler(
-    func_name: Optional[str] = None, /
-) -> _DecoratorGeneric[PyHandlerTypes[PyHandlerArgTypeVar]]:
-    if func_name is None:
-        return _py_invoke_handler_decorator
+@final
+class Commands(ffi.Commands):
+    @overload
+    def invoke_handler(
+        self, /
+    ) -> _DecoratorGeneric[PyHandlerTypes[PyHandlerArgTypeVar]]: ...
+    @overload
+    def invoke_handler(
+        self, func_name: str, /
+    ) -> _DecoratorGeneric[PyHandlerTypes[PyHandlerArgTypeVar]]: ...
+    def invoke_handler(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self, func_name: Optional[str] = None, /
+    ) -> _DecoratorGeneric[PyHandlerTypes[PyHandlerArgTypeVar]]:
+        """
+        NOTE: only accept `async foo(...) -> Foo`,
+            not accept `foo(...) -> Coroutine[None, None, Foo]`
+            neither `Awaitable`.
 
-    def _decorator(
-        func: PyHandlerTypes[PyHandlerArgTypeVar], /
-    ) -> PyHandlerTypes[PyHandlerArgTypeVar]:
-        raw_handler = _py_to_raw_handler_wrapper(func)
-        raw_invoke_handler(func_name, raw_handler)
-        return func
+            i.e., the return anno must be directly `Foo`
+        """
+        if func_name is None:
 
-    return _decorator
+            def _py_invoke_handler_decorator(
+                func: PyHandlerTypes[PyHandlerArgTypeVar],
+            ) -> PyHandlerTypes[PyHandlerArgTypeVar]:
+                name = func.__name__
+                raw_handler = _py_to_raw_handler_wrapper(func)
+                # TODO, XXX, FIXME: use `super`
+                ffi.Commands.invoke_handler(self, name, raw_handler)
+                return func
+
+            return _py_invoke_handler_decorator
+
+        def _decorator(
+            func: PyHandlerTypes[PyHandlerArgTypeVar], /
+        ) -> PyHandlerTypes[PyHandlerArgTypeVar]:
+            raw_handler = _py_to_raw_handler_wrapper(func)
+            # TODO, XXX, FIXME: use `super`
+            ffi.Commands.invoke_handler(self, func_name, raw_handler)
+            return func
+
+        return _decorator

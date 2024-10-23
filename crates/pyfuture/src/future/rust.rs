@@ -184,7 +184,7 @@ impl Future for RustFuture {
 }
 
 #[derive(Debug)]
-pub struct CancelOnDrop(RustFuture);
+pub struct CancelOnDrop(pub RustFuture);
 
 impl Drop for CancelOnDrop {
     fn drop(&mut self) {

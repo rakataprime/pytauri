@@ -1,5 +1,16 @@
-from typing import Protocol, Union, TYPE_CHECKING
+from typing import (
+    Protocol,
+    Union,
+    TYPE_CHECKING,
+    final,
+    Callable,
+    Generic,
+    Awaitable,
+    Any,
+)
 from types import ModuleType
+
+from typing_extensions import Self, TypeVar
 
 # See: <https://pypi.org/project/backports.entry-points-selectable/>
 # and: <https://docs.python.org/3/library/importlib.metadata.html#entry-points>
@@ -9,7 +20,16 @@ from importlib_metadata import (
     EntryPoint,
 )
 
-__all__ = ["raw_invoke_handler", "EXT_MOD", "AppHandle"]
+__all__ = [
+    "EXT_MOD",
+    "AppHandle",
+    "RunEvent",
+    "App",
+    "Commands",
+    "PyFuture",
+    "Runner",
+    "build_app",
+]
 
 
 def _load_ext_mod() -> ModuleType:
@@ -53,12 +73,8 @@ EXT_MOD = _load_ext_mod()
 
 _pytauri_mod = _load_pytauri_mod(EXT_MOD)
 
-if TYPE_CHECKING:
 
-    class AppHandle: ...
-else:
-    AppHandle = _pytauri_mod.AppHandle
-
+T = TypeVar("T", infer_variance=True)
 
 _RawHandlerArgType = bytearray
 # from `Vec<u8>`. See https://pyo3.rs/v0.22.2/conversions/tables#argument-types
@@ -66,13 +82,70 @@ _RawHandlerReturnType = Union[bytes, bytearray]
 
 
 class _RawHandlerType(Protocol):
-    def __call__(
-        self, arg: _RawHandlerArgType, /, *, app_handle: AppHandle
+    async def __call__(
+        self, arg: _RawHandlerArgType, /, *, app_handle: "AppHandle"
     ) -> _RawHandlerReturnType: ...
 
 
-class _RawInvokeHandlerType(Protocol):
-    def __call__(self, func_name: str, py_func: _RawHandlerType) -> None: ...
+_AppRunCallbackType = Callable[["AppHandle", "RunEvent"], None]
 
 
-raw_invoke_handler: _RawInvokeHandlerType = _pytauri_mod.py_invoke_handler
+class _CancelHandleProto(Protocol):
+    def __call__(self) -> None: ...
+
+
+class _PyRunnerProto(Protocol):
+    def __call__(self, py_future: "PyFuture[Any]", /) -> _CancelHandleProto: ...
+
+
+if TYPE_CHECKING:
+
+    @final
+    class AppHandle: ...
+
+    @final
+    class RunEvent: ...
+
+    @final
+    class App:
+        def run(self, callback: _AppRunCallbackType, /) -> None: ...
+        def run_iteration(self, callback: _AppRunCallbackType, /) -> None:
+            """Approximately 2ms per call"""
+            ...
+
+    class Commands:
+        def __new__(cls) -> Self: ...
+        def invoke_handler(self, func_name: str, py_func: _RawHandlerType) -> None: ...
+
+    @final
+    class PyFuture(Generic[T]):
+        @property
+        def awaitable(self) -> Awaitable[T]: ...
+
+        def set_result(self, result: Any, /) -> None: ...
+
+        def set_exception(self, exception: BaseException, /) -> None: ...
+
+    @final
+    class Runner:
+        def __new__(cls, py_runner: _PyRunnerProto, /) -> Self: ...
+
+        def close(self) -> None:
+            """Must call this method when `py_runner` is unavailable."""
+            ...
+
+    def build_app(runner: Runner, commands: Commands, /, **kwargs: Any) -> App: ...
+
+
+else:
+    AppHandle = _pytauri_mod.AppHandle
+    RunEvent = _pytauri_mod.RunEvent
+    App = _pytauri_mod.App
+    Commands = _pytauri_mod.Commands
+    Runner = _pytauri_mod.Runner
+
+    @final
+    class PyFuture(_pytauri_mod.PyFuture, Generic[T]):
+        pass
+
+    build_app = _pytauri_mod.build_app

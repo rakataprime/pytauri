@@ -26,14 +26,14 @@ class _NamedProto(Protocol):
 
 # `0` means no KEYWORD argument
 class _PyHandlerType_0(_NamedProto, Protocol, Generic[PyHandlerArgTypeVar]):
-    def __call__(self, arg: PyHandlerArgTypeVar, /) -> _PyHandlerReturnType: ...
+    async def __call__(self, arg: PyHandlerArgTypeVar, /) -> _PyHandlerReturnType: ...
 
 
 # `a` means has `app_handle` KEYWORD argument,
 # if also has `webview_window` KEYWORD argument(in future), use `_PyHandlerType_aw`;
 # Because we use alphabetical order, so it is `aw` instead of `wa`.
 class _PyHandlerType_a(_NamedProto, Protocol, Generic[PyHandlerArgTypeVar]):
-    def __call__(
+    async def __call__(
         self, arg: PyHandlerArgTypeVar, /, *, app_handle: AppHandle
     ) -> _PyHandlerReturnType: ...
 

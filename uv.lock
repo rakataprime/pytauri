@@ -317,12 +317,13 @@ requires-dist = [
 
 [[package]]
 name = "pytauri-demo"
-version = "0.1.dev9+g9445489.d20241019"
+version = "0.1.dev12+g96fcd96.d20241023"
 source = { editable = "example" }
 dependencies = [
     { name = "codelldb" },
     { name = "pydantic" },
     { name = "pydantic-core" },
+    { name = "pyfuture" },
     { name = "pytauri" },
     { name = "pytauri-plugin-notification" },
     { name = "typing-extensions" },
@@ -333,6 +334,7 @@ requires-dist = [
     { name = "codelldb", editable = "python/codelldb" },
     { name = "pydantic", specifier = ">=2" },
     { name = "pydantic-core" },
+    { name = "pyfuture", editable = "python/pyfuture" },
     { name = "pytauri", editable = "python/pytauri" },
     { name = "pytauri-plugin-notification", editable = "python/pytauri-plugin-notification" },
     { name = "typing-extensions", specifier = ">=4" },

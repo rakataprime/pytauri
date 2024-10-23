@@ -1,13 +1,10 @@
-from typing import Callable
-
 from codelldb import debug
 from pydantic import BaseModel
-from pytauri import py_invoke_handler, AppHandle
+from pytauri import Commands, AppHandle, Runner, build_app, RunEvent
 from pytauri_plugin_notification import NotificationExt
+from pyfuture import RunnerBuilder
 
-from pytauri_demo._ext_mod import run  # pyright: ignore[reportUnknownVariableType]
-
-run: Callable[[], None]
+commands = Commands()
 
 
 class Person(BaseModel):
@@ -18,8 +15,8 @@ class Greeting(BaseModel):
     message: str
 
 
-@py_invoke_handler()
-def greet(person: Person, app_handle: AppHandle) -> Greeting:
+@commands.invoke_handler()
+async def greet(person: Person, app_handle: AppHandle) -> Greeting:
     notification_ext = NotificationExt(app_handle)
     notification = notification_ext.notification()
     notification.builder().title("Greeting").body(f"Hello, {person.name}!").show()
@@ -27,10 +24,26 @@ def greet(person: Person, app_handle: AppHandle) -> Greeting:
     return Greeting(message=f"Hello, {person.name}!")
 
 
-def main():
-    debug()
-    run()
+def async_main():
+    # or `trio` or `anyio`
+    import asyncio
+
+    async def _async_main():
+        async with RunnerBuilder() as runner_builder:
+            app = build_app(runner_builder.build(Runner), commands)
+
+            def callback(_app_handle: AppHandle, _run_event: RunEvent):
+                pass
+
+            while True:
+                app.run_iteration(callback)
+                # NOTE: The smaller the value, the higher the refresh rate,
+                # but the higher the performance cost
+                await asyncio.sleep(0.0001)
+
+    asyncio.run(_async_main())
 
 
 if __name__ == "__main__":
-    main()
+    debug()
+    async_main()
