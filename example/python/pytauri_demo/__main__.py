@@ -29,7 +29,30 @@ async def greet(person: Person, app_handle: AppHandle) -> Greeting:
     return Greeting(message=f"Hello, {person.name}!")
 
 
+async def _async_task() -> None:
+    from anyio import sleep
+
+    for i in range(3, 0, -1):
+        print(f"task done in {i} seconds")
+        await sleep(1)
+    print("task done")
+
+
 def async_main() -> None:
+    """async version of `sync_main`
+
+    WARNING:
+        - This function has a higher performance cost because it needs to continuously call `app.run_iteration` in a loop,
+            which requires constantly accessing local thread variables in Rust;
+        - And, `app.run_iteration` will **block the python async event loop**!
+
+        It is recommended to use `sync_main` and use `runner_builder.blocking_portal` to implement asynchronous code.
+
+    TODO:
+        In the future, we might provide a `run_iteration_unchecked` method,
+        which does not check if it is called in the thread that created the App each time it is called.
+        This might improve performance? idk XD
+    """
     # or `trio` or `anyio`
     import asyncio
 
@@ -64,6 +87,10 @@ def async_main() -> None:
                     else:
                         logger.debug(run_event_enum)
 
+            # NOTE: `run_iteration`will block the python async event loop,
+            # so this task will pause during the calling of `run_iteration`.
+            asyncio.create_task(_async_task())
+            # or `await _async_task()` running synchronously
             try:
                 while not exit_requested:
                     app.run_iteration(callback)
@@ -112,6 +139,11 @@ def sync_main() -> None:
                 else:
                     logger.debug(run_event_enum)
 
+        # NOTE: This `blocking_portal` is the blocking_portal that runs the async commands `greets`
+        blocking_portal = runner_builder.blocking_portal
+
+        blocking_portal.start_task_soon(_async_task)
+        # or `blocking_portal.call(_async_task)` running synchronously
         app.run(callback)
 
 

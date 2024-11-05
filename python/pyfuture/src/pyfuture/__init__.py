@@ -192,6 +192,8 @@ class _PyRunner:
 
 
 class RunnerBuilder:
+    blocking_portal: BlockingPortal
+
     def __init__(self):
         self._exit_stack = AsyncExitStack()
 
@@ -207,7 +209,7 @@ class RunnerBuilder:
         exit_stack = await self._exit_stack.__aenter__()
         # NOTE: keep the order of entering context managers
         # `runner_stack` must after `blocking_portal` and `task_group`
-        self._blocking_portal = await exit_stack.enter_async_context(BlockingPortal())
+        self.blocking_portal = await exit_stack.enter_async_context(BlockingPortal())
         self._task_group = await exit_stack.enter_async_context(create_task_group())
         self._runner_stack = exit_stack.enter_context(_RunnerStack[_RunnerProto]())
 
@@ -219,7 +221,7 @@ class RunnerBuilder:
     def build(self, runner_cls: Type[_RunnerTypeVar]) -> _RunnerTypeVar:
         """NOTE: this method can be call thread-safely."""
         py_runner = _PyRunner(
-            self._blocking_portal,
+            self.blocking_portal,
             self._task_group,
             self._cancelled_exc_class,
             self._event_loop_thread_id,
