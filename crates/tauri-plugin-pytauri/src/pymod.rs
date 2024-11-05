@@ -16,9 +16,87 @@ pub(crate) const PYO3_MOD_NAME: &str = "pytauri";
 pub type FutureRunner = Py<Runner>;
 pub type PyCommands = Py<Commands>;
 
+trait PyMatchMethods {
+    type Output;
+    fn r#match(&self) -> Self::Output;
+}
+
+macro_rules! impl_py_match_methods {
+    ($cls:ty, $ret:ty) => {
+        #[pymethods]
+        impl $cls {
+            fn r#match(&self) -> $ret {
+                <Self as $crate::pymod::PyMatchMethods>::r#match(self)
+            }
+        }
+    };
+}
+
+#[pyclass(frozen)]
+#[non_exhaustive]
+enum RunEventEnum {
+    Exit(),
+    #[non_exhaustive]
+    ExitRequested {
+        code: Option<i32>,
+        // TODO, XXX, FIXME: `ExitRequestApi` is a private type in `tauri`,
+        // we need create a issue to `tauri`, or we cant implement this.
+        // api: ExitRequestApi,
+    },
+    #[non_exhaustive]
+    WindowEvent {
+        label: String,
+        // TODO:
+        // event: WindowEvent,
+    },
+    #[non_exhaustive]
+    WebviewEvent {
+        label: String,
+        // TODO:
+        // event: WebviewEvent,
+    },
+    Ready(),
+    Resumed(),
+    MainEventsCleared(),
+    MenuEvent(/* TODO: tauri::menu::MenuEvent */),
+    // TODO:
+    // TrayIconEvent(tauri::tray::TrayIconEvent),
+}
+
 #[pyclass(frozen)]
 #[non_exhaustive]
 pub struct RunEvent(pub tauri::RunEvent);
+
+impl PyMatchMethods for RunEvent {
+    type Output = RunEventEnum;
+
+    fn r#match(&self) -> Self::Output {
+        match &self.0 {
+            tauri::RunEvent::Exit => RunEventEnum::Exit(),
+            tauri::RunEvent::ExitRequested {
+                code, /* TODO */ ..
+            } => RunEventEnum::ExitRequested { code: *code },
+            tauri::RunEvent::WindowEvent {
+                label, /* TODO */ ..
+            } => RunEventEnum::WindowEvent {
+                label: label.to_owned(),
+            },
+            tauri::RunEvent::WebviewEvent {
+                label, /* TODO */ ..
+            } => RunEventEnum::WebviewEvent {
+                label: label.to_owned(),
+            },
+            tauri::RunEvent::Ready => RunEventEnum::Ready(),
+            tauri::RunEvent::Resumed => RunEventEnum::Resumed(),
+            tauri::RunEvent::MainEventsCleared => RunEventEnum::MainEventsCleared(),
+            tauri::RunEvent::MenuEvent(/* TODO */ _) => RunEventEnum::MenuEvent(),
+            // TODO: tauri::RunEvent::TrayIconEvent,
+            event => unimplemented!("Unimplemented RunEvent: {event:?}"),
+        }
+    }
+}
+
+impl_py_match_methods!(RunEvent, RunEventEnum);
 
 #[pyclass(frozen)]
 #[non_exhaustive]
@@ -210,6 +288,7 @@ pub fn pymodule_export(
     self_module.add_class::<App>()?;
     self_module.add_class::<AppHandle>()?;
     self_module.add_class::<RunEvent>()?;
+    self_module.add_class::<RunEventEnum>()?;
     self_module.add_class::<Commands>()?;
     self_module.add_class::<Runner>()?;
     self_module.add_class::<PyFuture>()?;

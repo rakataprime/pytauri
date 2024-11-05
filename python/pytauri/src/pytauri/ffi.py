@@ -1,5 +1,6 @@
 from typing import (
     Protocol,
+    Optional,
     Union,
     TYPE_CHECKING,
     final,
@@ -24,6 +25,8 @@ __all__ = [
     "EXT_MOD",
     "AppHandle",
     "RunEvent",
+    "RunEventEnum",
+    "RunEventEnumType",
     "App",
     "Commands",
     "PyFuture",
@@ -104,7 +107,37 @@ if TYPE_CHECKING:
     class AppHandle: ...
 
     @final
-    class RunEvent: ...
+    class RunEvent:
+        def match(self, /) -> "RunEventEnumType": ...
+
+    @final
+    class RunEventEnum:
+        @final
+        class Exit: ...
+
+        @final
+        class ExitRequested:
+            code: Optional[int]
+
+        @final
+        class WindowEvent:
+            label: str
+
+        @final
+        class WebviewEvent:
+            label: str
+
+        @final
+        class Ready: ...
+
+        @final
+        class Resumed: ...
+
+        @final
+        class MainEventsCleared: ...
+
+        @final
+        class MenuEvent: ...
 
     @final
     class App:
@@ -138,6 +171,7 @@ if TYPE_CHECKING:
 else:
     AppHandle = _pytauri_mod.AppHandle
     RunEvent = _pytauri_mod.RunEvent
+    RunEventEnum = _pytauri_mod.RunEventEnum
     App = _pytauri_mod.App
     Commands = _pytauri_mod.Commands
     Runner = _pytauri_mod.Runner
@@ -147,3 +181,14 @@ else:
         pass
 
     build_app = _pytauri_mod.build_app
+
+RunEventEnumType = Union[
+    RunEventEnum.Exit,
+    RunEventEnum.ExitRequested,
+    RunEventEnum.WindowEvent,
+    RunEventEnum.WebviewEvent,
+    RunEventEnum.Ready,
+    RunEventEnum.Resumed,
+    RunEventEnum.MainEventsCleared,
+    RunEventEnum.MenuEvent,
+]
