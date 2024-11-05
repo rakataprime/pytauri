@@ -111,14 +111,14 @@ async fn invoke_pyfunc(
             Ok(result) => {
                 // [`Response`] only accepts [`Vec<u8>`] as input,
                 result.extract::<Vec<u8>>(py).map_err(|e| {
-                    anyhow!("{e}: The python awaitable return a variable which is not bytes-like")
+                    anyhow!("{e:?}: The python awaitable return a variable which is not bytes-like")
                 })
             }
             Err(e) => {
                 // we also print it to python, instead of raising it to python,
                 // that's because python code will not catch the exception, which will make python exit
                 e.print_and_set_sys_last_vars(py);
-                Err(anyhow!("Failed to run python awaitable"))
+                Err(anyhow!("{e:?}: Failed to run python awaitable"))
             }
         }
     })?;
