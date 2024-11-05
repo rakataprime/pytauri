@@ -143,7 +143,9 @@ if TYPE_CHECKING:
     class App:
         def run(self, callback: _AppRunCallbackType, /) -> None: ...
         def run_iteration(self, callback: _AppRunCallbackType, /) -> None:
-            """Approximately 2ms per call"""
+            """Approximately 2ms per call in debug mod"""
+
+        def cleanup_before_exit(self, /) -> None: ...
 
     class Commands:
         def __new__(cls) -> Self: ...

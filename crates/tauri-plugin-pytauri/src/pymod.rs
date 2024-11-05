@@ -1,4 +1,4 @@
-use std::cell::{RefCell, RefMut};
+use std::cell::{Ref, RefCell, RefMut};
 use std::thread_local;
 
 use dashmap::DashMap;
@@ -148,7 +148,15 @@ impl App {
     ) -> PyResult<RefMut<'_, Option<tauri::App>>> {
         app_inst_cell
             .try_borrow_mut()
-            .map_err(|_| PyRuntimeError::new_err("The app already borrowed mutably"))
+            .map_err(|_| PyRuntimeError::new_err("The app is currently borrowed"))
+    }
+
+    fn try_borrow_app_cell(
+        app_inst_cell: &RefCell<Option<tauri::App>>,
+    ) -> PyResult<Ref<'_, Option<tauri::App>>> {
+        app_inst_cell
+            .try_borrow()
+            .map_err(|_| PyRuntimeError::new_err("The app is currently mutably borrowed"))
     }
 
     fn map_none_to_py_err<T>(opt: Option<T>) -> PyResult<T> {
@@ -201,6 +209,17 @@ impl App {
                 let mut app_inst_ref_mut = Self::try_borrow_mut_app_cell(app_inst_cell)?;
                 let app = Self::map_none_to_py_err(app_inst_ref_mut.as_mut())?;
                 app.run_iteration(Self::py_cb_to_rs_cb(callback));
+                Ok(())
+            })
+        })
+    }
+
+    fn cleanup_before_exit(&self, py: Python<'_>) -> PyResult<()> {
+        py.allow_threads(|| {
+            Self::APP_INST.with(|app_inst_cell| {
+                let app_inst_ref = Self::try_borrow_app_cell(app_inst_cell)?;
+                let app = Self::map_none_to_py_err(app_inst_ref.as_ref())?;
+                app.cleanup_before_exit();
                 Ok(())
             })
         })

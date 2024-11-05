@@ -37,31 +37,43 @@ def async_main() -> None:
         async with RunnerBuilder() as runner_builder:
             app = build_app(runner_builder.build(Runner), commands)
 
+            exit_requested = False
+
             if sys.version_info >= (3, 10):
 
                 def callback(_app_handle: AppHandle, run_event: RunEvent) -> None:
+                    nonlocal exit_requested
+
                     # pyright didn't ignore this deadcode in py39 automatically,
                     # so we have to do it manually
                     match run_event.match():  # pyright: ignore
                         case RunEventEnum.ExitRequested(code=code):
                             logger.info(f"ExitRequested: {code}")
+                            exit_requested = True
                         case event:
                             logger.debug(event)
             else:
 
                 def callback(_app_handle: AppHandle, run_event: RunEvent) -> None:
-                    run_event_enum = run_event.match()
+                    nonlocal exit_requested
 
+                    run_event_enum = run_event.match()
                     if isinstance(run_event_enum, RunEventEnum.ExitRequested):
                         logger.info(f"ExitRequested: {run_event_enum.code}")
+                        exit_requested = True
                     else:
                         logger.debug(run_event_enum)
 
-            while True:
-                app.run_iteration(callback)
-                # NOTE: The smaller the value, the higher the refresh rate,
-                # but the higher the performance cost
-                await asyncio.sleep(0.0001)
+            try:
+                while not exit_requested:
+                    app.run_iteration(callback)
+                    # NOTE: The smaller the value, the higher the refresh rate,
+                    # but the higher the performance cost
+                    await asyncio.sleep(0.0001)
+            finally:
+                # necessary for `run_iteration`, but not necessary for `run`,
+                # because `run` will call `cleanup_before_exit` for you
+                app.cleanup_before_exit()
 
     asyncio.run(_async_main())
 
