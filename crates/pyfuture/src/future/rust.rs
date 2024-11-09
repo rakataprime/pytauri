@@ -32,6 +32,12 @@ enum RustFutureInner {
     Done,
 }
 
+/// # NOTE
+///
+/// When calling the [RustFuture::poll] method, it will internally call [Python::with_gil],
+/// which means it may block the Rust async runtime.
+/// Therefore, it is best to use a separate Rust async runtime to schedule this future.
+
 // The reason why we use Inner struct instead of directly use `enum RustFuture`:
 //
 // If we use `enum RustFuture`directly,

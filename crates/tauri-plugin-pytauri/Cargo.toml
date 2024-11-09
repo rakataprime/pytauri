@@ -1,0 +1,22 @@
+[package]
+name = "tauri-plugin-pytauri"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+links = "tauri-plugin-pytauri"
+
+[dependencies]
+tauri = { workspace = true }
+http = "1.1"
+
+pyo3 = { workspace = true }
+pyfuture = { workspace = true }
+pytauri-core = { workspace = true }
+
+anyhow = { workspace = true }
+dashmap = { workspace = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+
+[build-dependencies]
+tauri-plugin = { workspace = true }

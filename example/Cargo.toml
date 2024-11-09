@@ -17,16 +17,17 @@ crate-type = ["cdylib", "lib"]
 pyo3 = { workspace = true }
 
 tauri = { workspace = true, features = ["devtools", "config-toml"] }
-tauri-plugin-shell = "2"
-serde = { workspace = true }
-serde_json = { workspace = true }
-
-anyhow = { workspace = true }
-
+pytauri = { workspace = true }
 tauri-plugin-pytauri = { workspace = true }
+
+tauri-plugin-shell = "2"
 
 tauri-plugin-notification = { workspace = true }
 pytauri-plugin-notification = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+
 
 [build-dependencies]
 tauri-build = { workspace = true }

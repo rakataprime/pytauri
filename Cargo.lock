@@ -2870,11 +2870,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "pytauri"
+version = "0.1.0"
+dependencies = [
+ "pyfuture",
+ "pyo3",
+ "pytauri-core",
+ "tauri",
+ "tauri-plugin-pytauri",
+]
+
+[[package]]
+name = "pytauri-core"
+version = "0.1.0"
+dependencies = [
+ "pyo3",
+ "tauri",
+]
+
+[[package]]
 name = "pytauri-demo"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "pyo3",
+ "pytauri",
  "pytauri-plugin-notification",
  "serde",
  "serde_json",
@@ -2890,9 +2909,9 @@ name = "pytauri-plugin-notification"
 version = "0.1.0"
 dependencies = [
  "pyo3",
+ "pytauri-core",
  "tauri",
  "tauri-plugin-notification",
- "tauri-plugin-pytauri",
 ]
 
 [[package]]
@@ -3790,10 +3809,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dashmap",
+ "http",
  "pyfuture",
  "pyo3",
+ "pytauri-core",
  "tauri",
  "tauri-plugin",
+ "tokio",
 ]
 
 [[package]]

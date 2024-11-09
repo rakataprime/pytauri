@@ -30,6 +30,8 @@ tempfile = { version = "3" }
 tracing = { version = "0.1" }
 
 tauri-plugin-pytauri = { path = "crates/tauri-plugin-pytauri" }
+pytauri-core = { path = "crates/pytauri-core" }
+pytauri = { path = "crates/pytauri" }
 pytauri-plugin-notification = { path = "crates/pytauri-plugin-notification" }
 pyfuture = { path = "crates/pyfuture" }
 

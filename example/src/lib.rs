@@ -10,12 +10,11 @@ mod _ext_mod {
 
     #[pymodule_init]
     fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
-        tauri_plugin_pytauri::pymodule_export(
+        pytauri::pymodule_export(
             module,
             |_kwargs| {
                 let builder = tauri::Builder::default()
                     .plugin(tauri_plugin_shell::init())
-                    .plugin(tauri_plugin_pytauri::init())
                     .plugin(tauri_plugin_notification::init());
                 Ok(builder)
             },

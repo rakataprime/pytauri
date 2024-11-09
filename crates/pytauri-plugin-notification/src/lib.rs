@@ -1,8 +1,9 @@
 use pyo3::exceptions;
 use pyo3::prelude::*;
+use pytauri_core::tauri_runtime::Runtime;
+use pytauri_core::AppHandle;
 use tauri_plugin_notification as plugin;
 use tauri_plugin_notification::NotificationExt as _;
-use tauri_plugin_pytauri::{pytauri, Runtime};
 
 struct PluginError(plugin::Error);
 
@@ -87,7 +88,7 @@ impl NotificationBuilder {
 #[pyclass(frozen)]
 #[non_exhaustive]
 struct Notification {
-    app_handle: Py<pytauri::AppHandle>,
+    app_handle: Py<AppHandle>,
 }
 
 #[pymethods]
@@ -104,13 +105,13 @@ impl Notification {
 #[pyclass(frozen)]
 #[non_exhaustive]
 struct NotificationExt {
-    app_handle: Py<pytauri::AppHandle>,
+    app_handle: Py<AppHandle>,
 }
 
 #[pymethods]
 impl NotificationExt {
     #[new]
-    const fn new(app_handle: Py<pytauri::AppHandle>) -> Self {
+    const fn new(app_handle: Py<AppHandle>) -> Self {
         Self { app_handle }
     }
 
