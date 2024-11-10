@@ -18,8 +18,8 @@ async function rawPyInvoke(
         headers: { [PY_INVOKE_HEADER]: funcName },
     });
 
-    // development-time type checking to make sure pytauri ipc implementation is correct
     if (process.env.NODE_ENV === "development") {
+        // development-time type checking to make sure pytauri ipc implementation is correct
         return invokePromise.then((response) => {
             if (!(response instanceof ArrayBuffer)) {
                 throw new Error(
