@@ -1,6 +1,0 @@
-{
-  "include": [
-    "api-iife.ts"
-  ],
-  "extends": "../../tsconfig.base.json",
-}
