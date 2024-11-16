@@ -51,6 +51,12 @@ importers:
         specifier: ^8.6.0
         version: 8.6.0(eslint@9.10.0)(typescript@5.6.2)
 
+  crates/tauri-plugin-pytauri:
+    dependencies:
+      tauri-plugin-pytauri-api:
+        specifier: workspace:*
+        version: link:../../packages/tauri-plugin-pytauri-api
+
   example/front:
     dependencies:
       '@tauri-apps/api':

@@ -1,3 +1,4 @@
 packages:
   - "packages/*"
   - "example/front"
+  - "crates/tauri-plugin-pytauri"

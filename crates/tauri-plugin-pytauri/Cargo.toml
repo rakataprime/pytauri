@@ -5,6 +5,7 @@ edition = { workspace = true }
 license = { workspace = true }
 rust-version = { workspace = true }
 links = "tauri-plugin-pytauri"
+include = ["/src", "/dist", "build.rs"]
 
 [dependencies]
 tauri = { workspace = true }

@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "build": "rollup -c --configPlugin typescript"
+  },
+  "dependencies": {
+    "tauri-plugin-pytauri-api": "workspace:*"
+  }
+}
