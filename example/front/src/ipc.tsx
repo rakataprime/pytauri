@@ -1,4 +1,9 @@
 import { pyInvoke, fromJson } from "tauri-plugin-pytauri-api";
+// or if tauri config `app.withGlobalTauri = true`:
+//
+// ```js
+// const {pyInvoke, fromJson} = window.__TAURI__.pytauri
+// ```
 
 export interface Person {
     name: string;
