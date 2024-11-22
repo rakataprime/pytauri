@@ -104,7 +104,7 @@ impl CommandsInner {
         py_func
     }
 
-    fn invoke_pyfunc_bound(
+    fn invoke_pyfunc(
         py: Python<'_>,
         pyfuture_runner: &Py<Runner>,
         py_func: &PyObject,
@@ -170,7 +170,7 @@ impl CommandsInner {
 
         let future_runner_ref = pyfuture_runner.borrow(py);
         let future = future_runner_ref
-            .try_future_bound(py, awaitable.unbind())
+            .try_future(py, awaitable.unbind())
             .ok_or(
                 anyhow!("python future runner is already closed, all python async tasks will fail")
                     .context(format!("runner: {pyfuture_runner:?}")),
@@ -178,7 +178,7 @@ impl CommandsInner {
         Ok(future)
     }
 
-    fn extract_vec_u8_from_result_bound(
+    fn extract_vec_u8_from_result(
         py: Python<'_>,
         result: &PyResult<PyObject>,
     ) -> anyhow::Result<Vec<u8>> {
@@ -267,7 +267,7 @@ async fn _invoke_pyfunc_cmd_with_gil(invoke: &Invoke<PyTauriRuntime>) -> anyhow:
     let pyfuture_runner = app_handle.pyfuture_runner();
 
     let invoke_future = Python::with_gil(|py| {
-        CommandsInner::invoke_pyfunc_bound(
+        CommandsInner::invoke_pyfunc(
             py,
             &pyfuture_runner,
             &py_func,
@@ -279,7 +279,7 @@ async fn _invoke_pyfunc_cmd_with_gil(invoke: &Invoke<PyTauriRuntime>) -> anyhow:
     let invoke_result = CancelOnDrop(invoke_future).await;
 
     let response =
-        Python::with_gil(|py| CommandsInner::extract_vec_u8_from_result_bound(py, &invoke_result))?;
+        Python::with_gil(|py| CommandsInner::extract_vec_u8_from_result(py, &invoke_result))?;
 
     Ok(response)
 }

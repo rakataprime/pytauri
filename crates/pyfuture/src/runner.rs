@@ -72,7 +72,7 @@ impl Runner {
 }
 
 impl Runner {
-    pub fn try_future_bound(&self, py: Python<'_>, awaitable: PyObject) -> Option<RustFuture> {
+    pub fn try_future(&self, py: Python<'_>, awaitable: PyObject) -> Option<RustFuture> {
         match &self.0 {
             RunnerInner::Alive { runner, .. } => {
                 let runner = runner.inner.clone_ref(py);
@@ -81,8 +81,8 @@ impl Runner {
             RunnerInner::Closed => None,
         }
     }
-    pub fn future_bound(&self, py: Python<'_>, awaitable: PyObject) -> RustFuture {
-        self.try_future_bound(py, awaitable)
+    pub fn future(&self, py: Python<'_>, awaitable: PyObject) -> RustFuture {
+        self.try_future(py, awaitable)
             .expect("The runner is already closed")
     }
 

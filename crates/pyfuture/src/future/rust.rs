@@ -83,7 +83,7 @@ impl RustFuture {
     // NOTE: For developer, whatever if you need `&mut` to change this stcuture,
     // you have to use `&mut` to make sure only one thread can cancel the future at a time,
     // it's for thread-safe for python async runtime.
-    pub fn cancel_bound(&mut self, py: Python<'_>) -> PyResult<PyObject> {
+    pub fn cancel(&mut self, py: Python<'_>) -> PyResult<PyObject> {
         match &mut self.0 {
             RustFutureInner::Running(RunningRustFuture {
                 cancel_handle,
@@ -99,13 +99,13 @@ impl RustFuture {
     }
 }
 
-// The reason why we don't implement cancellation on Drop of `RustFuture` directly,
-// See: <https://github.com/PyO3/pyo3/pull/4095#issuecomment-2064889181>.
-// In short, `cancel_bound` need GIL,
-// but calling GIL on every `Drop` is much too prone to deadlocks.
-//
-// The reason why we use newtype `CancelOnDrop` instead of a `is_cancel_on_drop` field in `RustFuture`
-// is that newtype will make you easier to find the place where GIL required for cancellation.
+/// The reason why we don't implement cancellation on Drop of `RustFuture` directly,
+/// See: <https://github.com/PyO3/pyo3/pull/4095#issuecomment-2064889181>.
+/// In short, [RustFuture::cancel] need GIL,
+/// but calling GIL on every `Drop` is much too prone to deadlocks.
+///
+/// The reason why we use newtype `CancelOnDrop` instead of a `is_cancel_on_drop` field in `RustFuture`
+/// is that newtype will make you easier to find the place where GIL required for cancellation.
 impl Drop for RustFuture {
     fn drop(&mut self) {
         if self.is_running() && !self.is_cancellation_required() {
@@ -199,7 +199,7 @@ impl Drop for CancelOnDrop {
         let rs_future = &mut self.0;
         if rs_future.is_running() && !rs_future.is_cancellation_required() {
             Python::with_gil(|py| {
-                let result = rs_future.cancel_bound(py);
+                let result = rs_future.cancel(py);
                 if let Err(e) = result {
                     match e.traceback(py).map(|t| t.format()) {
                         // TODO: use `log` crate instead of `eprintln!`

@@ -169,7 +169,7 @@ impl App {
             Python::with_gil(|py| {
                 let result = callback.call1(py, (py_app_handle, py_run_event));
                 if let Err(e) = result {
-                    // TODO, XXX: maybe we should use `write_unraisable_bound` and panic here?
+                    // TODO, XXX: maybe we should use `PyErr::write_unraisable` and panic here?
                     e.restore(py);
                 }
             })
