@@ -317,7 +317,7 @@ requires-dist = [
 
 [[package]]
 name = "pytauri-demo"
-version = "0.1.dev26+geefdcd8.d20241122"
+version = "0.1.0"
 source = { editable = "example" }
 dependencies = [
     { name = "codelldb" },
