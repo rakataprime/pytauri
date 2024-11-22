@@ -46,7 +46,7 @@ impl PyFuture {
     }
 
     fn set_exception(&mut self, exception: Bound<'_, PyAny>) {
-        self.result = Some(Err(PyErr::from_value_bound(exception)));
+        self.result = Some(Err(PyErr::from_value(exception)));
         self.wake();
     }
 }

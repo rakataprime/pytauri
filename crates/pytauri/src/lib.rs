@@ -42,14 +42,14 @@ pub fn pymodule_export(
             PyRuntimeError::new_err("An app instance has already been created in this thread")
         })
     };
-    let build_app = PyCFunction::new_closure_bound(
+    let build_app = PyCFunction::new_closure(
         py,
         Some(c"build_app"),
         Some(c"build tauri app"),
         build_app_closure,
     )?;
 
-    let self_module = PyModule::new_bound(py, PYO3_MOD_NAME)?;
+    let self_module = PyModule::new(py, PYO3_MOD_NAME)?;
     self_module.add_class::<App>()?;
     self_module.add_class::<AppHandle>()?;
     self_module.add_class::<RunEvent>()?;

@@ -11,7 +11,7 @@ rust-version = "1.81"
 
 
 [workspace.dependencies]
-pyo3 = { version = "0.22" }
+pyo3 = { version = "0.23" }
 
 tauri = { version = "2", features = ["wry"] }
 tauri-build = { version = "2" }

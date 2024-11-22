@@ -139,7 +139,7 @@ impl Future for RustFuture {
                         // we require the implementation of runner returns as soon as possible,
                         // so this should not block too long.
                         runner.call1(py, (py_future.clone(),)).unwrap_or_else(|e| {
-                            match e.traceback_bound(py).map(|t| t.format()) {
+                            match e.traceback(py).map(|t| t.format()) {
                                 Some(Ok(traceback)) => {
                                     panic!(
                                         "Error while calling runner: {}\n{}",
@@ -201,7 +201,7 @@ impl Drop for CancelOnDrop {
             Python::with_gil(|py| {
                 let result = rs_future.cancel_bound(py);
                 if let Err(e) = result {
-                    match e.traceback_bound(py).map(|t| t.format()) {
+                    match e.traceback(py).map(|t| t.format()) {
                         // TODO: use `log` crate instead of `eprintln!`
                         Some(Ok(traceback)) => {
                             eprintln!(

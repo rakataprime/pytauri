@@ -139,7 +139,7 @@ impl CommandsInner {
         ```
         */
 
-        let func_arg = PyByteArray::new_bound(py, json_data);
+        let func_arg = PyByteArray::new(py, json_data);
         // TODO, XXX (perf): we create a new PyObject `app_handle_py` every time, which is not efficient;
         // if we can prove that the `app_handle` is singleton, we can cache it(i.g. PyObject).
         // We should create a issue to `tauri`.
@@ -147,7 +147,16 @@ impl CommandsInner {
         // TODO, XXX (perf): maybe we can cache this `PyDict`, something like `Vec<(PyFunc, PyDict)>`,
         // and determine whether to create `PyClass`(e.g. `app_handle`) by the `PyDict`'s key.
         let app_handle_py = AppHandle::new(app_handle);
-        let func_kwargs = [("app_handle", app_handle_py.into_py(py))].into_py_dict_bound(py);
+        let func_kwargs = [(
+            "app_handle",
+            app_handle_py
+                .into_pyobject(py)
+                // it should not panic
+                .expect("failed to create pyobject"),
+        )]
+        .into_py_dict(py)
+        // it should not panic
+        .expect("failed to create pyobject");
 
         let py_func = py_func.bind(py);
         let awaitable = py_func
