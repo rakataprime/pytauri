@@ -121,7 +121,7 @@ impl NotificationExt {
     }
 }
 
-#[pymodule(submodule)]
+#[pymodule(submodule, gil_used = false)]
 pub mod notification {
     #[pymodule_export]
     use crate::NotificationExt;

@@ -1,6 +1,6 @@
 use pyo3::prelude::*;
 
-#[pymodule]
+#[pymodule(gil_used = false)]
 #[pyo3(name = "_ext_mod")]
 mod _ext_mod {
     use super::*;

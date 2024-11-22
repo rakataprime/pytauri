@@ -50,6 +50,8 @@ pub fn pymodule_export(
     )?;
 
     let self_module = PyModule::new(py, PYO3_MOD_NAME)?;
+    self_module.gil_used(false)?;
+
     self_module.add_class::<App>()?;
     self_module.add_class::<AppHandle>()?;
     self_module.add_class::<RunEvent>()?;
