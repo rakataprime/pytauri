@@ -18,7 +18,7 @@ dev-dependencies = [
 ]
 
 [tool.uv.sources]
-pytauri_demo = { workspace = true }
+pytauri-demo = { workspace = true }
 pyfuture = { workspace = true }
 
 # https://docs.astral.sh/uv/concepts/workspaces/

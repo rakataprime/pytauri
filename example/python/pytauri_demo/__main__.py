@@ -4,7 +4,7 @@ import logging
 from codelldb import debug
 from pydantic import BaseModel
 from pytauri import Commands, AppHandle, Runner, build_app, RunEvent, RunEventEnum
-from pytauri_plugin_notification import NotificationExt
+from pytauri_plugin_notification import NotificationExt, NotificationBuilderArgs
 from pyfuture import RunnerBuilder, create_runner_builder
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,10 @@ class Greeting(BaseModel):
 async def greet(person: Person, app_handle: AppHandle) -> Greeting:
     notification_ext = NotificationExt(app_handle)
     notification = notification_ext.notification()
-    notification.builder().title("Greeting").body(f"Hello, {person.name}!").show()
+
+    notification.builder().show(
+        NotificationBuilderArgs(title="Greeting", body=f"Hello, {person.name}!")
+    )
 
     return Greeting(message=f"Hello, {person.name}!")
 
@@ -69,7 +72,7 @@ def async_main() -> None:
 
                     # pyright didn't ignore this deadcode in py39 automatically,
                     # so we have to do it manually
-                    match run_event.match():  # pyright: ignore
+                    match run_event.match_ref():  # pyright: ignore
                         case RunEventEnum.ExitRequested(code=code):
                             logger.info(f"ExitRequested: {code}")
                             exit_requested = True
@@ -80,7 +83,7 @@ def async_main() -> None:
                 def callback(_app_handle: AppHandle, run_event: RunEvent) -> None:
                     nonlocal exit_requested
 
-                    run_event_enum = run_event.match()
+                    run_event_enum = run_event.match_ref()
                     if isinstance(run_event_enum, RunEventEnum.ExitRequested):
                         logger.info(f"ExitRequested: {run_event_enum.code}")
                         exit_requested = True
@@ -115,7 +118,7 @@ def sync_main() -> None:
             def callback(_app_handle: AppHandle, run_event: RunEvent) -> None:
                 # pyright didn't ignore this deadcode in py39 automatically,
                 # so we have to do it manually
-                match run_event.match():  # pyright: ignore
+                match run_event.match_ref():  # pyright: ignore
                     case RunEventEnum.Ready():
                         logger.info("Ready")
                     case RunEventEnum.ExitRequested(code=code):
@@ -128,7 +131,7 @@ def sync_main() -> None:
         else:
 
             def callback(_app_handle: AppHandle, run_event: RunEvent) -> None:
-                run_event_enum = run_event.match()
+                run_event_enum = run_event.match_ref()
 
                 if isinstance(run_event_enum, RunEventEnum.Ready):
                     logger.info("Ready")

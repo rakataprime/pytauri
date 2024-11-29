@@ -9,6 +9,7 @@ resolution-markers = [
 members = [
     "codelldb",
     "pyfuture",
+    "pyo3-utils",
     "pytauri",
     "pytauri-demo",
     "pytauri-plugin-notification",
@@ -297,6 +298,17 @@ dev = [
 ]
 
 [[package]]
+name = "pyo3-utils"
+version = "0.1.0"
+source = { editable = "python/pyo3-utils" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "typing-extensions", specifier = ">=4" }]
+
+[[package]]
 name = "pytauri"
 version = "0.1.0"
 source = { editable = "python/pytauri" }
@@ -304,6 +316,7 @@ dependencies = [
     { name = "importlib-metadata" },
     { name = "pydantic" },
     { name = "pydantic-core" },
+    { name = "pyo3-utils" },
     { name = "typing-extensions" },
 ]
 
@@ -312,6 +325,7 @@ requires-dist = [
     { name = "importlib-metadata", specifier = ">=3.6" },
     { name = "pydantic", specifier = ">=2" },
     { name = "pydantic-core" },
+    { name = "pyo3-utils", editable = "python/pyo3-utils" },
     { name = "typing-extensions", specifier = ">=4" },
 ]
 

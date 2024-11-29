@@ -1,11 +1,23 @@
-use pyo3::exceptions;
+use std::error::Error;
+use std::fmt::{Debug, Display};
+
 use pyo3::prelude::*;
+use pyo3_utils::{ConsumedError, LockError, PyWrapper, PyWrapperT2};
 use pytauri_core::tauri_runtime::Runtime;
 use pytauri_core::AppHandle;
 use tauri_plugin_notification as plugin;
 use tauri_plugin_notification::NotificationExt as _;
 
+#[derive(Debug)]
 struct PluginError(plugin::Error);
+
+impl Display for PluginError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        <Self as Debug>::fmt(self, f)
+    }
+}
+
+impl Error for PluginError {}
 
 impl From<PluginError> for PyErr {
     fn from(value: PluginError) -> Self {
@@ -21,66 +33,75 @@ impl From<plugin::Error> for PluginError {
     }
 }
 
-#[pyclass]
+// We use a `newtype` instead of directly implementing methods like `show(title=...)`,
+// This is to facilitate the addition of new methods in the future,
+// such as `hide(NotificationBuilderArgs)` instead of repeatedly declaring `hide(title=...)`
+#[pyclass(frozen)]
 #[non_exhaustive]
-struct NotificationBuilder {
-    _inner: Option<plugin::NotificationBuilder<Runtime>>,
+#[derive(Clone, Debug)]
+pub struct NotificationBuilderArgs {
+    pub title: Option<String>,
+    pub body: Option<String>,
 }
 
-impl NotificationBuilder {
-    const fn new(inner: plugin::NotificationBuilder<Runtime>) -> Self {
-        Self {
-            _inner: Some(inner),
-        }
+#[pymethods]
+impl NotificationBuilderArgs {
+    #[new]
+    #[pyo3(signature = (*, title = None, body = None))]
+    fn new(title: Option<String>, body: Option<String>) -> Self {
+        Self { title, body }
     }
+}
 
-    /// Take the inner `NotificationBuilder` from `self_`,
-    /// if `NotificationBuilder` is already consumed, return `PyRuntimeError`.
+impl NotificationBuilderArgs {
+    fn call_show(self, mut builder: plugin::NotificationBuilder<Runtime>) -> plugin::Result<()> {
+        let Self { title, body } = self;
+        if let Some(v) = title {
+            builder = builder.title(v)
+        }
+        if let Some(v) = body {
+            builder = builder.body(v)
+        }
+        builder.show()
+    }
+}
 
-    // NOTE: `#[inline]` is important:
-    // This function essentially acts as a macro to reduce repetitive code in `pymethods`.
-    // We need to inline it to inform the compiler of our changes to `self._inner`,
-    // so that subsequent operations on `self._inner` can be optimized.
-    #[inline]
-    fn _inner(&mut self) -> PyResult<plugin::NotificationBuilder<Runtime>> {
-        self._inner.take().ok_or_else(|| {
-            exceptions::PyRuntimeError::new_err("NotificationBuilder is already consumed")
-        })
+#[pyclass(frozen)]
+#[non_exhaustive]
+struct NotificationBuilder(pub PyWrapper<PyWrapperT2<plugin::NotificationBuilder<Runtime>>>);
+
+impl NotificationBuilder {
+    fn new(builder: plugin::NotificationBuilder<Runtime>) -> Self {
+        Self(PyWrapper::new2(builder))
     }
 }
 
 #[pymethods]
 impl NotificationBuilder {
-    fn title(mut self_: PyRefMut<'_, Self>, title: String) -> PyResult<PyRefMut<'_, Self>> {
-        let builder = self_._inner()?.title(title);
-        let _ = self_._inner.insert(builder);
-        Ok(self_)
-    }
-
-    fn body(mut self_: PyRefMut<'_, Self>, body: String) -> PyResult<PyRefMut<'_, Self>> {
-        let builder = self_._inner()?.body(body);
-        let _ = self_._inner.insert(builder);
-        Ok(self_)
-    }
-
-    fn show(&mut self, py: Python<'_>) -> PyResult<()> {
+    fn show(&self, py: Python<'_>, args: NotificationBuilderArgs) -> PyResult<()> {
         // TODO (perf): Do we really need `py.allow_threads` here?
         // I mean, I don't know how long `NotificationBuilder::show` will take,
         // maybe it's short enough?
         py.allow_threads(|| {
-            self._inner()?.show().map_err(PluginError)?;
-
-            Ok(())
+            let builder = self
+                .0
+                .try_take_inner()
+                .map_err(Into::<LockError>::into)?
+                .map_err(Into::<ConsumedError>::into)?;
+            args.call_show(builder)
+                .map_err(Into::<PluginError>::into)
+                .map_err(Into::<PyErr>::into)
         })
     }
 }
 
-// TODO(perf): we can't use struct `Notification` directly
+// TODO, FIXME, PEFR: we can't use struct `Notification` directly
 //
 // - Because `app_handle.notification()` returns `&Notification`,
 //   however pyclass doesn't allow borrowing (i.g, ownership required).
 //
-//   > We should create a issue to `tauri` for `Notification.clone()`.
+//   > - We should create a issue to `tauri` for `Notification.clone()`
+//   > - Or we can use [pyo3_utils::{Deref, DerefMut}] convention
 //
 // - And, `Notification` is private, maybe is tauri's mistake.
 //
@@ -91,13 +112,18 @@ struct Notification {
     app_handle: Py<AppHandle>,
 }
 
+impl Notification {
+    const fn new(app_handle: Py<AppHandle>) -> Self {
+        Self { app_handle }
+    }
+}
+
 #[pymethods]
 impl Notification {
     fn builder(&self) -> NotificationBuilder {
         // NOTE: this function is simple enough,
         // so we don't need to use `py.allow_threads`
-
-        let builder = self.app_handle.get().0.notification().builder();
+        let builder = self.app_handle.get().0.inner_ref().notification().builder();
         NotificationBuilder::new(builder)
     }
 }
@@ -117,7 +143,7 @@ impl NotificationExt {
 
     fn notification(&self, py: Python<'_>) -> Notification {
         let app_handle = self.app_handle.bind(py).clone().unbind();
-        Notification { app_handle }
+        Notification::new(app_handle)
     }
 }
 
@@ -128,6 +154,9 @@ pub mod notification {
 
     #[pymodule_export]
     use crate::Notification;
+
+    #[pymodule_export]
+    use crate::NotificationBuilderArgs;
 
     #[pymodule_export]
     use crate::NotificationBuilder;

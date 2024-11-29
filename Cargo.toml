@@ -24,6 +24,7 @@ serde_json = { version = "1" }
 
 anyhow = { version = "1" }
 dashmap = { version = "6" }
+parking_lot = { version = "0.12" }
 
 tempfile = { version = "3" }
 
@@ -34,6 +35,7 @@ pytauri-core = { path = "crates/pytauri-core" }
 pytauri = { path = "crates/pytauri" }
 pytauri-plugin-notification = { path = "crates/pytauri-plugin-notification" }
 pyfuture = { path = "crates/pyfuture" }
+pyo3-utils = { path = "crates/pyo3-utils" }
 
 tokio = { version = "1", default-features = false }
 

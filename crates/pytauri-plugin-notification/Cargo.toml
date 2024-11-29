@@ -12,3 +12,4 @@ tauri-plugin-notification = { workspace = true }
 pytauri-core = { workspace = true }
 
 pyo3 = { workspace = true }
+pyo3-utils = { workspace = true }

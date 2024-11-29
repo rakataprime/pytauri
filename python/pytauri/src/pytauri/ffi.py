@@ -102,13 +102,13 @@ class _PyRunnerProto(Protocol):
 
 
 if TYPE_CHECKING:
+    from pyo3_utils import PyMatchRefMixin
 
     @final
     class AppHandle: ...
 
     @final
-    class RunEvent:
-        def match(self, /) -> "RunEventEnumType": ...
+    class RunEvent(PyMatchRefMixin["RunEventEnumType"]): ...
 
     @final
     class RunEventEnum:

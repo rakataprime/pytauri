@@ -1,28 +1,14 @@
 pub mod tauri_runtime;
 
 use std::cell::{Ref, RefCell, RefMut};
+use std::ops::Deref;
 use std::thread_local;
 
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
+use pyo3_utils::{PyMatchRef, PyWrapper, PyWrapperT0};
 
 use crate::tauri_runtime::Runtime;
-
-trait PyMatchMethods {
-    type Output;
-    fn r#match(&self) -> Self::Output;
-}
-
-macro_rules! impl_py_match_methods {
-    ($cls:ty, $ret:ty) => {
-        #[pymethods]
-        impl $cls {
-            fn r#match(&self) -> $ret {
-                <Self as $crate::PyMatchMethods>::r#match(self)
-            }
-        }
-    };
-}
 
 #[pyclass(frozen)]
 #[non_exhaustive]
@@ -57,13 +43,13 @@ pub enum RunEventEnum {
 
 #[pyclass(frozen)]
 #[non_exhaustive]
-pub struct RunEvent(pub tauri::RunEvent);
+pub struct RunEvent(pub PyWrapper<PyWrapperT0<tauri::RunEvent>>);
 
-impl PyMatchMethods for RunEvent {
+impl PyMatchRef for RunEvent {
     type Output = RunEventEnum;
 
-    fn r#match(&self) -> Self::Output {
-        match &self.0 {
+    fn match_ref(&self) -> Self::Output {
+        match self.0.inner_ref().deref() {
             tauri::RunEvent::Exit => RunEventEnum::Exit(),
             tauri::RunEvent::ExitRequested {
                 code, /* TODO */ ..
@@ -88,18 +74,30 @@ impl PyMatchMethods for RunEvent {
     }
 }
 
-impl_py_match_methods!(RunEvent, RunEventEnum);
-
-#[pyclass(frozen)]
-#[non_exhaustive]
-pub struct AppHandle(pub tauri::AppHandle<Runtime>);
-
-impl AppHandle {
-    pub const fn new(app_handle: tauri::AppHandle<Runtime>) -> Self {
-        Self(app_handle)
+#[pymethods]
+impl RunEvent {
+    fn match_ref(&self) -> <Self as PyMatchRef>::Output {
+        <Self as PyMatchRef>::match_ref(self)
     }
 }
 
+impl RunEvent {
+    const fn new(run_event: tauri::RunEvent) -> Self {
+        Self(PyWrapper::new0(run_event))
+    }
+}
+
+#[pyclass(frozen)]
+#[non_exhaustive]
+pub struct AppHandle(pub PyWrapper<PyWrapperT0<tauri::AppHandle<Runtime>>>);
+
+impl AppHandle {
+    pub fn new(app_handle: tauri::AppHandle<Runtime>) -> Self {
+        Self(PyWrapper::new0(app_handle))
+    }
+}
+
+// TODO, FIXME: use `pyclass(unsendable)` instead of `thread_local`
 #[pyclass(frozen)]
 /// `#[non_exhaustive]` just make it private so that other crates can only create it by [App::try_build]
 #[non_exhaustive]
@@ -163,8 +161,8 @@ impl App {
         callback: PyObject,
     ) -> impl FnMut(&tauri::AppHandle<Runtime>, tauri::RunEvent) {
         move |app_handle, run_event| {
-            let py_app_handle = AppHandle(app_handle.to_owned());
-            let py_run_event = RunEvent(run_event);
+            let py_app_handle = AppHandle::new(app_handle.to_owned());
+            let py_run_event = RunEvent::new(run_event);
 
             Python::with_gil(|py| {
                 let result = callback.call1(py, (py_app_handle, py_run_event));

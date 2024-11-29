@@ -10,8 +10,12 @@ dependencies = [
     # See: <https://pypi.org/project/backports.entry-points-selectable/>
     # and: <https://docs.python.org/3/library/importlib.metadata.html#entry-points>
     # Deprecated: once we no longer support versions Python 3.9, we can remove this dependency.
-    "importlib-metadata >= 3.6"
+    "importlib-metadata >= 3.6",
+    "pyo3-utils",
 ]
+
+[tool.uv.sources]
+pyo3-utils= { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

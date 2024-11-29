@@ -1,12 +1,11 @@
 [package]
-name = "pytauri-core"
+name = "pyo3-utils"
 version = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 rust-version = { workspace = true }
 
-[dependencies]
-tauri = { workspace = true }
 
+[dependencies]
 pyo3 = { workspace = true }
-pyo3-utils = { workspace = true }
+parking_lot = { workspace = true }

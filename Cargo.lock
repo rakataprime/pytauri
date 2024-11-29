@@ -2870,6 +2870,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyo3-utils"
+version = "0.1.0"
+dependencies = [
+ "parking_lot",
+ "pyo3",
+]
+
+[[package]]
 name = "pytauri"
 version = "0.1.0"
 dependencies = [
@@ -2885,6 +2893,7 @@ name = "pytauri-core"
 version = "0.1.0"
 dependencies = [
  "pyo3",
+ "pyo3-utils",
  "tauri",
 ]
 
@@ -2909,6 +2918,7 @@ name = "pytauri-plugin-notification"
 version = "0.1.0"
 dependencies = [
  "pyo3",
+ "pyo3-utils",
  "pytauri-core",
  "tauri",
  "tauri-plugin-notification",
