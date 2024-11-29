@@ -46,14 +46,14 @@ def async_main() -> None:
 
     WARNING:
         - This function has a higher performance cost because it needs to continuously call `app.run_iteration` in a loop,
-            which requires constantly accessing local thread variables in Rust;
+            which will constantly acquire internal locks and check if the app has been consumed.
         - And, `app.run_iteration` will **block the python async event loop**!
 
         It is recommended to use `sync_main` and use `runner_builder.blocking_portal` to implement asynchronous code.
 
     TODO:
         In the future, we might provide a `run_iteration_unchecked` method,
-        which does not check if it is called in the thread that created the App each time it is called.
+        which will not check if the lock is held, nor check if the app has been consumed.
         This might improve performance? idk XD
     """
     # or `trio` or `anyio`

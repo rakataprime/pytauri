@@ -141,9 +141,29 @@ if TYPE_CHECKING:
 
     @final
     class App:
-        def run(self, callback: _AppRunCallbackType, /) -> None: ...
-        def run_iteration(self, callback: _AppRunCallbackType, /) -> None:
-            """Approximately 2ms per call in debug mod"""
+        """NOTE: This class is not thread-safe, and should not be shared between threads.
+
+        - You can only use it on the thread it was created on (must be the main thread on macOS)
+        - And you need to ensure it is garbage collected on the thread it was created on,
+            otherwise it will cause memory leaks
+        """
+
+        def run(self, callback: Optional[_AppRunCallbackType] = None, /) -> None:
+            """Consume and run this app, will run until the app is exited.
+
+            NOTE: If `callback` is specified, it must not raise an exception,
+            otherwise it is undefined behavior, and in most cases, the program will panic.
+            """
+
+        def run_iteration(
+            self, callback: Optional[_AppRunCallbackType] = None, /
+        ) -> None:
+            """Run this app iteratively without consuming it, calling `callback` on each iteration.
+
+            NOTE: `callback` has the same restrictions as `App.run`.
+
+            Tip: Approximately 2ms per call in debug mode.
+            """
 
         def cleanup_before_exit(self, /) -> None: ...
 

@@ -11,7 +11,7 @@ use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict as _, PyByteArray};
 pub(crate) use pytauri_core::tauri_runtime::Runtime as PyTauriRuntime;
-use pytauri_core::AppHandle;
+use pytauri_core::{AppHandle, PyAppHandleExt};
 use tauri::ipc::{Invoke, InvokeBody, InvokeError, InvokeResponseBody};
 use tauri::Manager as _;
 use tokio::runtime as rt;
@@ -109,7 +109,7 @@ impl CommandsInner {
         pyfuture_runner: &Py<Runner>,
         py_func: &PyObject,
         json_data: &[u8],
-        app_handle: tauri::AppHandle<PyTauriRuntime>,
+        py_app_handle: &Py<AppHandle>,
     ) -> anyhow::Result<RustFuture> {
         /*
         Do not use `jiter` to serialize the body into a `PyObject` here, but directly convert it to `PyByteArray`
@@ -140,23 +140,12 @@ impl CommandsInner {
         */
 
         let func_arg = PyByteArray::new(py, json_data);
-        // TODO, XXX (perf): we create a new PyObject `app_handle_py` every time, which is not efficient;
-        // if we can prove that the `app_handle` is singleton, we can cache it(i.g. PyObject).
-        // We should create a issue to `tauri`.
-        //
         // TODO, XXX (perf): maybe we can cache this `PyDict`, something like `Vec<(PyFunc, PyDict)>`,
         // and determine whether to create `PyClass`(e.g. `app_handle`) by the `PyDict`'s key.
-        let app_handle_py = AppHandle::new(app_handle);
-        let func_kwargs = [(
-            "app_handle",
-            app_handle_py
-                .into_pyobject(py)
-                // it should not panic
-                .expect("failed to create pyobject"),
-        )]
-        .into_py_dict(py)
-        // it should not panic
-        .expect("failed to create pyobject");
+        let func_kwargs = [("app_handle", py_app_handle)]
+            .into_py_dict(py)
+            // it should not panic
+            .expect("failed to create pyobject");
 
         let py_func = py_func.bind(py);
         let awaitable = py_func
@@ -169,12 +158,10 @@ impl CommandsInner {
             .context("Failed to call the python function")?;
 
         let future_runner_ref = pyfuture_runner.borrow(py);
-        let future = future_runner_ref
-            .try_future(py, awaitable.unbind())
-            .ok_or(
-                anyhow!("python future runner is already closed, all python async tasks will fail")
-                    .context(format!("runner: {pyfuture_runner:?}")),
-            )?;
+        let future = future_runner_ref.try_future(py, awaitable.unbind()).ok_or(
+            anyhow!("python future runner is already closed, all python async tasks will fail")
+                .context(format!("runner: {pyfuture_runner:?}")),
+        )?;
         Ok(future)
     }
 
@@ -255,7 +242,11 @@ static PY_FUTURE_RUNTIME: LazyLock<rt::Runtime> = LazyLock::new(|| {
 
 /// # NOTE
 ///
-/// This function should run in the dedicated runtime [PY_FUTURE_RUNTIME] because it acquires the GIL
+/// This function should run in the dedicated runtime [PY_FUTURE_RUNTIME] because it acquires the GIL.
+///
+/// # Panics
+///
+/// if [PyAppHandleExt::try_py_app_handle] is [Err].
 async fn _invoke_pyfunc_cmd_with_gil(invoke: &Invoke<PyTauriRuntime>) -> anyhow::Result<Vec<u8>> {
     let Invoke { message, .. } = invoke;
     let app_handle = message.webview_ref().app_handle();
@@ -265,15 +256,10 @@ async fn _invoke_pyfunc_cmd_with_gil(invoke: &Invoke<PyTauriRuntime>) -> anyhow:
     let pycommands = app_handle.pycommands();
     let py_func = pycommands.get_py_func(func_name)?;
     let pyfuture_runner = app_handle.pyfuture_runner();
+    let py_app_handle = app_handle.try_py_app_handle().unwrap();
 
     let invoke_future = Python::with_gil(|py| {
-        CommandsInner::invoke_pyfunc(
-            py,
-            &pyfuture_runner,
-            &py_func,
-            json_data,
-            app_handle.clone(),
-        )
+        CommandsInner::invoke_pyfunc(py, &pyfuture_runner, &py_func, json_data, &py_app_handle)
     })?;
 
     let invoke_result = CancelOnDrop(invoke_future).await;
@@ -286,7 +272,11 @@ async fn _invoke_pyfunc_cmd_with_gil(invoke: &Invoke<PyTauriRuntime>) -> anyhow:
 
 /// # NOTE
 ///
-/// This function should run in the dedicated runtime [PY_FUTURE_RUNTIME] because it acquires the GIL
+/// This function should run in the dedicated runtime [PY_FUTURE_RUNTIME] because it acquires the GIL.
+///
+/// # Panics
+///
+/// if [PyAppHandleExt::try_py_app_handle] is [Err].
 async fn invoke_pyfunc_cmd_with_gil(invoke: Invoke<PyTauriRuntime>) {
     let response = _invoke_pyfunc_cmd_with_gil(&invoke)
         .await

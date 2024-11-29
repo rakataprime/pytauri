@@ -25,6 +25,8 @@ pub fn pymodule_export(
     let build_app_closure = move |args: &Bound<'_, PyTuple>,
                                   kwargs: Option<&Bound<'_, PyDict>>|
           -> PyResult<App> {
+        let py = args.py();
+
         let pyfuture_runner = args.get_item(0)?.downcast_into::<Runner>()?.unbind();
         let commands = args
             .get_item(1)?
@@ -38,7 +40,7 @@ pub fn pymodule_export(
             .build(context_builder()?)
             .map_err(|e| PyRuntimeError::new_err(format!("Failed to build tauri app: {:?}", e)))?;
 
-        App::try_build(tauri_app).map_err(|_| {
+        App::try_build(py, tauri_app).map_err(|_| {
             PyRuntimeError::new_err("An app instance has already been created in this thread")
         })
     };
