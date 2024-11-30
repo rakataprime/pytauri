@@ -212,9 +212,7 @@ impl App {
             py.allow_threads_unsend(self, |slf| {
                 let app = slf
                     .0
-                    .try_take_inner()
-                    .map_err(Into::<PyErr>::into)?
-                    .map_err(Into::<PyErr>::into)?;
+                    .try_take_inner()??;
                 match callback {
                     Some(callback) => app.run(Self::py_cb_to_rs_cb(callback)),
                     None => app.run(Self::noop_callback),
@@ -231,9 +229,7 @@ impl App {
             py.allow_threads_unsend(self, |slf| {
                 let mut app = slf
                     .0
-                    .try_lock_inner_mut()
-                    .map_err(Into::<PyErr>::into)?
-                    .map_err(Into::<PyErr>::into)?;
+                    .try_lock_inner_mut()??;
                 match callback {
                     Some(callback) => app.run_iteration(Self::py_cb_to_rs_cb(callback)),
                     None => app.run_iteration(Self::noop_callback),
@@ -249,9 +245,7 @@ impl App {
             py.allow_threads_unsend(self, |slf| {
                 let app = slf
                     .0
-                    .try_lock_inner_ref()
-                    .map_err(Into::<PyErr>::into)?
-                    .map_err(Into::<PyErr>::into)?;
+                    .try_lock_inner_ref()??;
                 app.cleanup_before_exit();
                 Ok(())
             })

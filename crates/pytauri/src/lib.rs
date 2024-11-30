@@ -40,9 +40,7 @@ pub fn pymodule_export(
             .build(context_builder()?)
             .map_err(|e| PyRuntimeError::new_err(format!("Failed to build tauri app: {:?}", e)))?;
 
-        App::try_build(py, tauri_app).map_err(|_| {
-            PyRuntimeError::new_err("An app instance has already been created in this thread")
-        })
+        App::try_build(py, tauri_app)
     };
     let build_app = PyCFunction::new_closure(
         py,

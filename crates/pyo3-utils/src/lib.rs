@@ -234,7 +234,7 @@ impl<T> PyWrapper<PyWrapperT2<T>> {
     }
 
     pub fn try_into_inner(self) -> ConsumedResult<T> {
-        self.inner.into_inner().map_err(|_| ConsumedError)
+        self.inner.into_inner()
     }
 
     #[deprecated(note = "use `try_lock_inner_ref` instead")]

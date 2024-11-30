@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Debug, Display};
 
 use pyo3::prelude::*;
-use pyo3_utils::{ConsumedError, LockError, PyWrapper, PyWrapperT2};
+use pyo3_utils::{PyWrapper, PyWrapperT2};
 use pytauri_core::tauri_runtime::Runtime;
 use pytauri_core::AppHandle;
 use tauri_plugin_notification as plugin;
@@ -83,11 +83,7 @@ impl NotificationBuilder {
         // I mean, I don't know how long `NotificationBuilder::show` will take,
         // maybe it's short enough?
         py.allow_threads(|| {
-            let builder = self
-                .0
-                .try_take_inner()
-                .map_err(Into::<LockError>::into)?
-                .map_err(Into::<ConsumedError>::into)?;
+            let builder = self.0.try_take_inner()??;
             args.call_show(builder)
                 .map_err(Into::<PluginError>::into)
                 .map_err(Into::<PyErr>::into)
