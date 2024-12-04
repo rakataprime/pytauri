@@ -12,6 +12,7 @@ rust-version = "1.81"
 
 [workspace.dependencies]
 pyo3 = { version = "0.23" }
+pyo3-build-config = { version = "0.23" }
 
 tauri = { version = "2", features = ["wry"] }
 tauri-build = { version = "2" }
@@ -23,10 +24,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 
 anyhow = { version = "1" }
-dashmap = { version = "6" }
 parking_lot = { version = "0.12" }
-
-tempfile = { version = "3" }
 
 tracing = { version = "0.1" }
 

@@ -1,5 +1,5 @@
-from pytauri.ffi import (
-    EXT_MOD,
+from pytauri.ffi._ext_mod import EXT_MOD
+from pytauri.ffi.lib import (
     App,
     AppHandle,
     Builder,
@@ -12,9 +12,7 @@ from pytauri.ffi import (
     context_factory,
 )
 
-from pytauri.ipc import Commands
-
-__all__ = [
+__all__ = (
     "EXT_MOD",
     "App",
     "AppHandle",
@@ -26,5 +24,4 @@ __all__ = [
     "RunEventEnumType",
     "builder_factory",
     "context_factory",
-    "Commands",
-]
+)

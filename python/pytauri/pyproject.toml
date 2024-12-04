@@ -4,8 +4,8 @@ version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "pydantic >= 2",
-    "pydantic-core",          # `pydantic` will specify its version
+    "pydantic == 2.*",
+    "anyio == 4.*",
     "typing-extensions >= 4",
     # See: <https://pypi.org/project/backports.entry-points-selectable/>
     # and: <https://docs.python.org/3/library/importlib.metadata.html#entry-points>

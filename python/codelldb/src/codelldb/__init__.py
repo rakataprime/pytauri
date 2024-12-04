@@ -4,7 +4,7 @@
 from os import getenv, getpid
 from textwrap import dedent
 import json
-from logging import Logger
+from logging import getLogger
 from typing import Dict, TypedDict, Optional
 import socket
 
@@ -24,7 +24,7 @@ class _LldbRpcServerCfg(TypedDict):
 
 DEFAULT_HOST = "127.0.0.1"
 
-_logger = Logger(__name__)
+_logger = getLogger(__name__)
 
 
 class DebugError(Exception):

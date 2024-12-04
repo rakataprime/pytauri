@@ -1,40 +1,54 @@
 mod commands;
+mod gil_runtime;
 
+use std::error::Error;
+use std::fmt::Display;
 use std::ops::Deref;
-use std::sync::Arc;
 
-use pyfuture::runner::Runner;
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
+use pytauri_core::tauri_runtime::Runtime as PyTauriRuntime;
 use tauri::plugin::{Builder, TauriPlugin};
-use tauri::{Manager, Runtime, State};
+use tauri::{Manager, Runtime};
 
-use crate::commands::{invoke_handler, PyTauriRuntime};
-pub use crate::commands::{Commands, CommandsInner};
+use crate::commands::invoke_handler;
 
 const PLUGIN_NAME: &str = "pytauri";
 
-type PyFutureRunnerInner = Py<Runner>;
-struct PyFutureRunner(PyFutureRunnerInner);
+type PyInvokeHandlerType = PyObject;
 
-type PyCommandsInner = Arc<CommandsInner>;
-struct PyCommands(PyCommandsInner);
+struct PyInvokeHandler(PyInvokeHandlerType);
 
-pub fn init(
-    pyfuture_runner: PyFutureRunnerInner,
-    commands: PyCommandsInner,
-) -> TauriPlugin<PyTauriRuntime> {
+impl Deref for PyInvokeHandler {
+    type Target = PyInvokeHandlerType;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl PyInvokeHandler {
+    fn new(handler: PyInvokeHandlerType) -> Self {
+        Self(handler)
+    }
+}
+
+/// Each time [tauri::ipc::Invoke] is received, it will be called in the form of `py_invoke_handler(Invoke)`,
+/// and `py_invoke_handler` is responsible for handling `Invoke`.
+///
+/// # NOTE:
+///
+/// - `py_invoke_handler` will be called in the tokio runtime, so it must not block for a long time.
+///     - tokio runtime means it is running on an external thread
+/// - `py_invoke_handler` must not raise exception, otherwise it will result in logical undefined behavior.
+pub fn init(py_invoke_handler: PyInvokeHandlerType) -> TauriPlugin<PyTauriRuntime> {
     Builder::<PyTauriRuntime>::new(PLUGIN_NAME)
         .invoke_handler(invoke_handler)
         .setup(|app_handle, _plugin_api| {
             // if false, there has already state set for the app instance.
-            if !app_handle.manage(PyFutureRunner(pyfuture_runner)) {
+            if !app_handle.manage(PyInvokeHandler::new(py_invoke_handler)) {
                 unreachable!(
-                    "`PyFutureRunner` is private, so it is impossible for other crates to manage it"
-                )
-            }
-            if !app_handle.manage(PyCommands(commands)) {
-                unreachable!(
-                    "`PyCommands` is private, so it is impossible for other crates to manage it"
+                    "`PyInvokeHandler` is private, so it is impossible for other crates to manage it"
                 )
             }
             Ok(())
@@ -45,61 +59,49 @@ pub fn init(
 mod sealed {
     use super::*;
 
-    pub const UNINITIALIZED_ERR_MSG: &str = "The plugin is not initialized";
-
-    pub struct PyFutureRunnerState<'a>(pub(super) State<'a, PyFutureRunner>);
-
-    impl Deref for PyFutureRunnerState<'_> {
-        type Target = PyFutureRunnerInner;
-
-        fn deref(&self) -> &Self::Target {
-            &self.0 .0
-        }
-    }
-
-    pub struct PyCommandsState<'a>(pub(super) State<'a, PyCommands>);
-
-    impl Deref for PyCommandsState<'_> {
-        type Target = PyCommandsInner;
-
-        fn deref(&self) -> &Self::Target {
-            &self.0 .0
-        }
-    }
-
     pub trait SealedTrait<R> {}
 
     impl<R: Runtime, T: Manager<R>> SealedTrait<R> for T {}
 }
 
-use sealed::{PyCommandsState, PyFutureRunnerState, SealedTrait, UNINITIALIZED_ERR_MSG};
+#[derive(Debug)]
+pub struct PyInvokeHandlerStateError;
 
-pub trait PyTauriExt<R: Runtime>: Manager<R> + SealedTrait<R> {
-    fn try_pyfuture_runner(&self) -> Option<PyFutureRunnerState<'_>> {
-        self.try_state::<PyFutureRunner>().map(PyFutureRunnerState)
-    }
-
-    /// The return type is equivalent to &[PyFutureRunnerInner].
-    ///
-    /// # Panic
-    ///
-    /// If the plugin is not initialized.
-    fn pyfuture_runner(&self) -> PyFutureRunnerState<'_> {
-        self.try_pyfuture_runner().expect(UNINITIALIZED_ERR_MSG)
-    }
-
-    fn try_pycommands(&self) -> Option<PyCommandsState<'_>> {
-        self.try_state::<PyCommands>().map(PyCommandsState)
-    }
-
-    /// The return type is equivalent to &[PyCommandsInner].
-    ///
-    /// # Panic
-    ///
-    /// If the plugin is not initialized.
-    fn pycommands(&self) -> PyCommandsState<'_> {
-        self.try_pycommands().expect(UNINITIALIZED_ERR_MSG)
+impl Display for PyInvokeHandlerStateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Failed to get `PyInvokeHandler` from state, maybe `{}` is not initialized",
+            env!("CARGO_PKG_NAME")
+        )
     }
 }
 
-impl<R: Runtime, T: Manager<R>> PyTauriExt<R> for T {}
+impl Error for PyInvokeHandlerStateError {}
+
+impl From<PyInvokeHandlerStateError> for PyErr {
+    fn from(value: PyInvokeHandlerStateError) -> Self {
+        PyRuntimeError::new_err(format!("{value}"))
+    }
+}
+
+pub type PyInvokeHandlerStateResult<T> = Result<T, PyInvokeHandlerStateError>;
+
+pub trait PyInvokeHandlerExt<R: Runtime>: Manager<R> + sealed::SealedTrait<R> {
+    fn try_py_invoke_handler(
+        &self,
+    ) -> PyInvokeHandlerStateResult<impl Deref<Target = PyInvokeHandlerType>> {
+        self.try_state::<PyInvokeHandler>()
+            .map(|state| state.inner().deref())
+            .ok_or(PyInvokeHandlerStateError)
+    }
+
+    /// # Panic
+    ///
+    /// If the plugin is not initialized.
+    fn py_invoke_handler(&self) -> impl Deref<Target = PyInvokeHandlerType> {
+        self.try_py_invoke_handler().unwrap()
+    }
+}
+
+impl<R: Runtime, T: Manager<R>> PyInvokeHandlerExt<R> for T {}

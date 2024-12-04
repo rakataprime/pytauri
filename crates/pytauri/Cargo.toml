@@ -11,4 +11,4 @@ tauri-plugin-pytauri = { workspace = true }
 pytauri-core = { workspace = true }
 
 pyo3 = { workspace = true }
-pyfuture = { workspace = true }
+pyo3-utils = { workspace = true }

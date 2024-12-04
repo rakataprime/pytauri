@@ -313,18 +313,18 @@ name = "pytauri"
 version = "0.1.0"
 source = { editable = "python/pytauri" }
 dependencies = [
+    { name = "anyio" },
     { name = "importlib-metadata" },
     { name = "pydantic" },
-    { name = "pydantic-core" },
     { name = "pyo3-utils" },
     { name = "typing-extensions" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "anyio", specifier = "==4.*" },
     { name = "importlib-metadata", specifier = ">=3.6" },
-    { name = "pydantic", specifier = ">=2" },
-    { name = "pydantic-core" },
+    { name = "pydantic", specifier = "==2.*" },
     { name = "pyo3-utils", editable = "python/pyo3-utils" },
     { name = "typing-extensions", specifier = ">=4" },
 ]
@@ -334,10 +334,9 @@ name = "pytauri-demo"
 version = "0.1.0"
 source = { editable = "example" }
 dependencies = [
+    { name = "anyio" },
     { name = "codelldb" },
     { name = "pydantic" },
-    { name = "pydantic-core" },
-    { name = "pyfuture" },
     { name = "pytauri" },
     { name = "pytauri-plugin-notification" },
     { name = "typing-extensions" },
@@ -345,10 +344,9 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "anyio", specifier = "==4.*" },
     { name = "codelldb", editable = "python/codelldb" },
-    { name = "pydantic", specifier = ">=2" },
-    { name = "pydantic-core" },
-    { name = "pyfuture", editable = "python/pyfuture" },
+    { name = "pydantic", specifier = "==2.*" },
     { name = "pytauri", editable = "python/pytauri" },
     { name = "pytauri-plugin-notification", editable = "python/pytauri-plugin-notification" },
     { name = "typing-extensions", specifier = ">=4" },

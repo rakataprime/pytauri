@@ -4,6 +4,10 @@ use std::path::PathBuf;
 const COMMANDS: &[&str] = &["pyfunc"];
 
 fn main() {
+    // for `#[cfg(not(Py_GIL_DISABLED))]`,
+    // see <https://pyo3.rs/v0.23.2/building-and-distribution/multiple-python-versions.html#using-pyo3-build-config>
+    pyo3_build_config::use_pyo3_cfgs();
+
     // <https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-build-scripts>
     let is_debug = env::var("DEBUG").unwrap() == "true";
 

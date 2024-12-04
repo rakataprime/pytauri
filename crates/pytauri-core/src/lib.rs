@@ -1,4 +1,6 @@
+pub mod ipc;
 pub mod tauri_runtime;
+pub mod utils;
 
 use std::error::Error;
 use std::fmt::{Debug, Display};
@@ -210,9 +212,7 @@ impl App {
         // `self: &App` does not hold the GIL, so this is safe
         unsafe {
             py.allow_threads_unsend(self, |slf| {
-                let app = slf
-                    .0
-                    .try_take_inner()??;
+                let app = slf.0.try_take_inner()??;
                 match callback {
                     Some(callback) => app.run(Self::py_cb_to_rs_cb(callback)),
                     None => app.run(Self::noop_callback),
@@ -227,9 +227,7 @@ impl App {
         unsafe {
             // `self: &App` does not hold the GIL, so this is safe
             py.allow_threads_unsend(self, |slf| {
-                let mut app = slf
-                    .0
-                    .try_lock_inner_mut()??;
+                let mut app = slf.0.try_lock_inner_mut()??;
                 match callback {
                     Some(callback) => app.run_iteration(Self::py_cb_to_rs_cb(callback)),
                     None => app.run_iteration(Self::noop_callback),
@@ -243,12 +241,34 @@ impl App {
         // `self: &App` does not hold the GIL, so this is safe
         unsafe {
             py.allow_threads_unsend(self, |slf| {
-                let app = slf
-                    .0
-                    .try_lock_inner_ref()??;
+                let app = slf.0.try_lock_inner_ref()??;
                 app.cleanup_before_exit();
                 Ok(())
             })
         }
+    }
+}
+
+#[pyclass(frozen)]
+#[non_exhaustive]
+pub struct Context(pub PyWrapper<PyWrapperT2<tauri::Context>>);
+
+impl Context {
+    pub fn new(context: tauri::Context) -> Self {
+        Self(PyWrapper::new2(context))
+    }
+}
+
+#[pymodule(submodule, gil_used = false, name = "pytauri")]
+pub mod ext_mod {
+    use super::*;
+
+    #[pymodule_export]
+    pub use crate::{App, AppHandle, Context, RunEvent, RunEventEnum};
+
+    #[pymodule]
+    pub mod ipc {
+        #[pymodule_export]
+        pub use crate::ipc::{Invoke, InvokeResolver};
     }
 }

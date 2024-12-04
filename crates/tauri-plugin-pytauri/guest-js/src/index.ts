@@ -24,7 +24,7 @@ async function rawPyInvoke(
             if (!(response instanceof ArrayBuffer)) {
                 throw new Error(
                     "response is not ArrayBuffer. This is not your fault, \
-                    it's a bug for pytauri, please report this issue."
+it's a bug for pytauri, please report this issue."
                 );
             }
             return response;

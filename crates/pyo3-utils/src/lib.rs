@@ -52,7 +52,7 @@ impl From<LockError> for PyErr {
 pub type LockResult<T> = Result<T, LockError>;
 
 pub type PyWrapperT0<T> = Result<T, Infallible>;
-// TODO, FIXME: we have to use `RwLock` instead of `RefCell`,
+// TODO, FIXME, PERF: we have to use `RwLock` instead of `RefCell`,
 // it's because pyo3 require `Sync`.
 //
 // We need wait for pyo3 `unsync`, see also:

@@ -68,7 +68,7 @@ impl NotificationBuilderArgs {
 
 #[pyclass(frozen)]
 #[non_exhaustive]
-struct NotificationBuilder(pub PyWrapper<PyWrapperT2<plugin::NotificationBuilder<Runtime>>>);
+pub struct NotificationBuilder(pub PyWrapper<PyWrapperT2<plugin::NotificationBuilder<Runtime>>>);
 
 impl NotificationBuilder {
     fn new(builder: plugin::NotificationBuilder<Runtime>) -> Self {
@@ -104,7 +104,7 @@ impl NotificationBuilder {
 //   > create a issue to `tauri` to make `Notification` public.
 #[pyclass(frozen)]
 #[non_exhaustive]
-struct Notification {
+pub struct Notification {
     app_handle: Py<AppHandle>,
 }
 
@@ -126,7 +126,7 @@ impl Notification {
 
 #[pyclass(frozen)]
 #[non_exhaustive]
-struct NotificationExt {
+pub struct NotificationExt {
     app_handle: Py<AppHandle>,
 }
 
@@ -146,14 +146,5 @@ impl NotificationExt {
 #[pymodule(submodule, gil_used = false)]
 pub mod notification {
     #[pymodule_export]
-    use crate::NotificationExt;
-
-    #[pymodule_export]
-    use crate::Notification;
-
-    #[pymodule_export]
-    use crate::NotificationBuilderArgs;
-
-    #[pymodule_export]
-    use crate::NotificationBuilder;
+    pub use crate::{Notification, NotificationBuilder, NotificationBuilderArgs, NotificationExt};
 }

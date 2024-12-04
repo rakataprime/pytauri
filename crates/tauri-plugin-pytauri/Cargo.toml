@@ -14,15 +14,12 @@ include = [
 
 [dependencies]
 tauri = { workspace = true }
-http = "1.1"
 
 pyo3 = { workspace = true }
-pyfuture = { workspace = true }
 pytauri-core = { workspace = true }
 
-anyhow = { workspace = true }
-dashmap = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 
 [build-dependencies]
 tauri-plugin = { workspace = true }
+pyo3-build-config = { workspace = true, features = ["resolve-config"] }
