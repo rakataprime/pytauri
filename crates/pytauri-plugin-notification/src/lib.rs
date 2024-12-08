@@ -1,12 +1,22 @@
+use std::ops::Deref;
+
 use std::error::Error;
 use std::fmt::{Debug, Display};
 
 use pyo3::prelude::*;
-use pyo3_utils::{PyWrapper, PyWrapperT2};
+use pyo3::PyRef;
+use pyo3_utils::{MappableDeref, PyWrapper, PyWrapperSemverExt as _, PyWrapperT2};
 use pytauri_core::tauri_runtime::Runtime;
-use pytauri_core::AppHandle;
+use pytauri_core::{App, AppHandle};
 use tauri_plugin_notification as plugin;
-use tauri_plugin_notification::NotificationExt as _;
+
+#[pymodule(submodule, gil_used = false)]
+pub mod notification {
+    #[pymodule_export]
+    pub use crate::{NotificationBuilder, NotificationBuilderArgs, NotificationExt};
+
+    pub use crate::ImplNotificationExt;
+}
 
 #[derive(Debug)]
 struct PluginError(plugin::Error);
@@ -91,60 +101,66 @@ impl NotificationBuilder {
     }
 }
 
-// TODO, FIXME, PEFR: we can't use struct `Notification` directly
-//
-// - Because `app_handle.notification()` returns `&Notification`,
-//   however pyclass doesn't allow borrowing (i.g, ownership required).
-//
-//   > - We should create a issue to `tauri` for `Notification.clone()`
-//   > - Or we can use [pyo3_utils::{Deref, DerefMut}] convention
-//
-// - And, `Notification` is private, maybe is tauri's mistake.
-//
-//   > create a issue to `tauri` to make `Notification` public.
-#[pyclass(frozen)]
+#[derive(FromPyObject, IntoPyObject, IntoPyObjectRef)]
 #[non_exhaustive]
-pub struct Notification {
-    app_handle: Py<AppHandle>,
+// TODO: more types
+pub enum ImplNotificationExt {
+    App(Py<App>),
+    AppHandle(Py<AppHandle>),
 }
 
-impl Notification {
-    const fn new(app_handle: Py<AppHandle>) -> Self {
-        Self { app_handle }
+impl ImplNotificationExt {
+    #[inline]
+    fn borrow<'py>(&'py self, py: Python<'py>) -> ImplNotificationExtRef<'py> {
+        match self {
+            Self::App(v) => ImplNotificationExtRef::App(v.borrow(py)),
+            Self::AppHandle(v) => ImplNotificationExtRef::AppHandle(v.borrow(py)),
+        }
     }
 }
 
-#[pymethods]
-impl Notification {
-    fn builder(&self) -> NotificationBuilder {
-        // NOTE: this function is simple enough,
-        // so we don't need to use `py.allow_threads`
-        let builder = self.app_handle.get().0.inner_ref().notification().builder();
-        NotificationBuilder::new(builder)
+/// We need this newtype instead of directly implementing on [ImplNotificationExt],
+/// because [App] does not implement the [Py::get] method
+#[non_exhaustive]
+enum ImplNotificationExtRef<'py> {
+    App(PyRef<'py, App>),
+    AppHandle(PyRef<'py, AppHandle>),
+}
+
+impl<'py> ImplNotificationExtRef<'py> {
+    // NOTE: `#[inline]` is necessary for optimization to dyn object
+    #[inline]
+    fn defer_dyn(
+        &self,
+    ) -> PyResult<Box<dyn Deref<Target = dyn plugin::NotificationExt<Runtime>> + '_>> {
+        macro_rules! defer_dyn_impl {
+            ($wrapper:expr) => {{
+                let guard = $wrapper.inner_ref_semver()??;
+                let guard =
+                    MappableDeref::map(guard, |v| v as &dyn plugin::NotificationExt<Runtime>);
+                Ok(Box::new(guard))
+            }};
+        }
+
+        match self {
+            Self::App(v) => defer_dyn_impl!(v.0),
+            Self::AppHandle(v) => defer_dyn_impl!(v.0),
+        }
     }
 }
 
 #[pyclass(frozen)]
 #[non_exhaustive]
-pub struct NotificationExt {
-    app_handle: Py<AppHandle>,
-}
+pub struct NotificationExt;
 
 #[pymethods]
 impl NotificationExt {
-    #[new]
-    const fn new(app_handle: Py<AppHandle>) -> Self {
-        Self { app_handle }
-    }
+    // TODO: Add `struct Notification` as an intermediate layer, currently blocked by:
+    // <https://github.com/tauri-apps/plugins-workspace/issues/2161>
 
-    fn notification(&self, py: Python<'_>) -> Notification {
-        let app_handle = self.app_handle.bind(py).clone().unbind();
-        Notification::new(app_handle)
+    #[staticmethod]
+    pub fn builder(slf: ImplNotificationExt, py: Python<'_>) -> PyResult<NotificationBuilder> {
+        let builder = slf.borrow(py).defer_dyn()?.notification().builder();
+        Ok(NotificationBuilder::new(builder))
     }
-}
-
-#[pymodule(submodule, gil_used = false)]
-pub mod notification {
-    #[pymodule_export]
-    pub use crate::{Notification, NotificationBuilder, NotificationBuilderArgs, NotificationExt};
 }

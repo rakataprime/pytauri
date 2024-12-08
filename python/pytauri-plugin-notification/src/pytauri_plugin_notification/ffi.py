@@ -1,14 +1,14 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, final, Union
 from types import ModuleType
 
 from typing_extensions import Self
-from pytauri import EXT_MOD, AppHandle
+from pytauri import EXT_MOD, AppHandle, App
 
 __all__ = [
     "NotificationBuilderArgs",
     "NotificationBuilder",
-    "Notification",
     "NotificationExt",
+    "ImplNotificationExt",
 ]
 
 
@@ -28,23 +28,24 @@ _notification_mod = _load_notification_mod(EXT_MOD)
 
 if TYPE_CHECKING:
 
+    @final
     class NotificationBuilderArgs:
         def __new__(
             cls, /, *, title: Optional[str] = None, body: Optional[str] = None
         ) -> Self: ...
 
+    @final
     class NotificationBuilder:
         def show(self, args: NotificationBuilderArgs, /) -> None: ...
 
-    class Notification:
-        def builder(self) -> NotificationBuilder: ...
-
+    @final
     class NotificationExt:
-        def __new__(cls, app: AppHandle, /) -> Self: ...
-        def notification(self) -> Notification: ...
+        @staticmethod
+        def builder(slf: "ImplNotificationExt", /) -> NotificationBuilder: ...
 
 else:
     NotificationBuilderArgs = _notification_mod.NotificationBuilderArgs
     NotificationBuilder = _notification_mod.NotificationBuilder
-    Notification = _notification_mod.Notification
     NotificationExt = _notification_mod.NotificationExt
+
+ImplNotificationExt = Union[App, AppHandle]

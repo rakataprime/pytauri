@@ -81,6 +81,18 @@ mod sealed {
     pub trait SealedUnsafeUngilExt {}
 
     impl SealedUnsafeUngilExt for Python<'_> {}
+
+    pub trait SealedMappableDeref {}
+
+    impl<'a, T: ?Sized> SealedMappableDeref for &'a T {}
+    impl<'a, T: ?Sized> SealedMappableDeref for RwLockReadGuard<'a, T> {}
+    impl<'a, T: ?Sized> SealedMappableDeref for MappedRwLockReadGuard<'a, T> {}
+
+    pub trait SealedMappableDerefMut {}
+
+    impl<'a, T: ?Sized> SealedMappableDerefMut for &'a mut T {}
+    impl<'a, T: ?Sized> SealedMappableDerefMut for RwLockWriteGuard<'a, T> {}
+    impl<'a, T: ?Sized> SealedMappableDerefMut for MappedRwLockWriteGuard<'a, T> {}
 }
 
 trait RwLockExt {
@@ -100,6 +112,98 @@ impl<T> RwLockExt for RwLock<T> {
 
     fn try_write_ext(&self) -> LockResult<RwLockWriteGuard<'_, T>> {
         self.try_write().ok_or(LockError)
+    }
+}
+
+pub trait MappableDeref<'a>: Deref + sealed::SealedMappableDeref {
+    fn map<U, F>(self, f: F) -> impl MappableDeref<'a, Target = U>
+    where
+        U: ?Sized + 'a,
+        F: FnOnce(&Self::Target) -> &U;
+}
+
+impl<'a, T> MappableDeref<'a> for &'a T
+where
+    T: ?Sized,
+{
+    fn map<U, F>(self, f: F) -> impl MappableDeref<'a, Target = U>
+    where
+        U: ?Sized + 'a,
+        F: FnOnce(&T) -> &U,
+    {
+        f(self)
+    }
+}
+
+impl<'a, T> MappableDeref<'a> for MappedRwLockReadGuard<'a, T>
+where
+    T: ?Sized + 'a,
+{
+    fn map<U, F>(self, f: F) -> impl MappableDeref<'a, Target = U>
+    where
+        U: ?Sized + 'a,
+        F: FnOnce(&T) -> &U,
+    {
+        MappedRwLockReadGuard::map(self, f)
+    }
+}
+
+impl<'a, T> MappableDeref<'a> for RwLockReadGuard<'a, T>
+where
+    T: ?Sized + 'a,
+{
+    fn map<U, F>(self, f: F) -> impl MappableDeref<'a, Target = U>
+    where
+        U: ?Sized + 'a,
+        F: FnOnce(&T) -> &U,
+    {
+        RwLockReadGuard::map(self, f)
+    }
+}
+
+pub trait MappableDerefMut<'a>: DerefMut + sealed::SealedMappableDerefMut {
+    fn map<U, F>(self, f: F) -> impl MappableDerefMut<'a, Target = U>
+    where
+        U: ?Sized + 'a,
+        F: FnOnce(&mut Self::Target) -> &mut U;
+}
+
+impl<'a, T> MappableDerefMut<'a> for &'a mut T
+where
+    T: ?Sized,
+{
+    fn map<U, F>(self, f: F) -> impl MappableDerefMut<'a, Target = U>
+    where
+        U: ?Sized + 'a,
+        F: FnOnce(&mut T) -> &mut U,
+    {
+        f(self)
+    }
+}
+
+impl<'a, T> MappableDerefMut<'a> for MappedRwLockWriteGuard<'a, T>
+where
+    T: ?Sized + 'a,
+{
+    fn map<U, F>(self, f: F) -> impl MappableDerefMut<'a, Target = U>
+    where
+        U: ?Sized + 'a,
+        F: FnOnce(&mut T) -> &mut U,
+    {
+        MappedRwLockWriteGuard::map(self, f)
+    }
+}
+
+impl<'a, T> MappableDerefMut<'a> for RwLockWriteGuard<'a, T>
+where
+    T: ?Sized + 'a,
+{
+    fn map<U, F>(self, f: F) -> impl MappableDerefMut<'a, Target = U>
+    where
+        U: ?Sized + 'a,
+        F: FnOnce(&mut T) -> &mut U,
+    {
+        RwLockWriteGuard::map(self, f)
     }
 }
 
@@ -127,13 +231,13 @@ impl<T> PyWrapper<PyWrapperT0<T>> {
     }
 
     #[inline]
-    pub fn inner_ref(&self) -> impl Deref<Target = T> + '_ {
+    pub fn inner_ref(&self) -> impl MappableDeref<'_, Target = T> {
         // TODO, FIXME: use [Result::into_ok] instead (unstable for now)
         self.inner.as_ref().unwrap()
     }
 
     #[inline]
-    pub fn inner_mut(&mut self) -> impl DerefMut<Target = T> + '_ {
+    pub fn inner_mut(&mut self) -> impl MappableDerefMut<'_, Target = T> {
         // TODO, FIXME: use [Result::into_ok] instead (unstable for now)
         self.inner.as_mut().unwrap()
     }
@@ -173,12 +277,12 @@ impl<T> PyWrapper<PyWrapperT1<T>> {
     }
 
     #[deprecated(note = "use `lock_inner_ref` instead")]
-    pub fn inner_ref(&self) -> MappedRwLockReadGuard<'_, T> {
+    pub fn inner_ref(&self) -> impl MappableDeref<'_, Target = T> {
         self.lock_inner_ref().expect(LOCK_ERROR_MSG)
     }
 
     #[deprecated(note = "use `lock_inner_mut` instead")]
-    pub fn inner_mut(&self) -> MappedRwLockWriteGuard<'_, T> {
+    pub fn inner_mut(&self) -> impl MappableDerefMut<'_, Target = T> {
         self.lock_inner_mut().expect(LOCK_ERROR_MSG)
     }
 }
@@ -250,14 +354,14 @@ impl<T> PyWrapper<PyWrapperT2<T>> {
     }
 
     #[deprecated(note = "use `try_lock_inner_ref` instead")]
-    pub fn inner_ref(&self) -> MappedRwLockReadGuard<'_, T> {
+    pub fn inner_ref(&self) -> impl MappableDeref<'_, Target = T> {
         self.try_lock_inner_ref()
             .expect(LOCK_ERROR_MSG)
             .expect(CONSUMED_ERROR_MSG)
     }
 
     #[deprecated(note = "use `try_lock_inner_mut` instead")]
-    pub fn inner_mut(&self) -> MappedRwLockWriteGuard<'_, T> {
+    pub fn inner_mut(&self) -> impl MappableDerefMut<'_, Target = T> {
         self.try_lock_inner_mut()
             .expect(LOCK_ERROR_MSG)
             .expect(CONSUMED_ERROR_MSG)
@@ -274,24 +378,28 @@ pub trait PyWrapperSemverExt: sealed::SealedPyWrapper {
     type Wrapped;
 
     /// For implementations of [PyWrapper]::<[PyWrapperT1]> and ::<[PyWrapperT2]>, locks will be acquired
-    fn inner_ref_semver(&self) -> LockResult<ConsumedResult<impl Deref<Target = Self::Wrapped>>>;
+    fn inner_ref_semver(
+        &self,
+    ) -> LockResult<ConsumedResult<impl MappableDeref<'_, Target = Self::Wrapped>>>;
     /// For implementations of [PyWrapper]::<[PyWrapperT1]> and ::<[PyWrapperT2]>, locks will be acquired
     fn inner_mut_semver(
         &mut self,
-    ) -> LockResult<ConsumedResult<impl DerefMut<Target = Self::Wrapped>>>;
+    ) -> LockResult<ConsumedResult<impl MappableDerefMut<'_, Target = Self::Wrapped>>>;
     fn into_inner_semver(self) -> ConsumedResult<Self::Wrapped>;
 }
 
 impl<T> PyWrapperSemverExt for PyWrapper<PyWrapperT0<T>> {
     type Wrapped = T;
 
-    fn inner_ref_semver(&self) -> LockResult<ConsumedResult<impl Deref<Target = Self::Wrapped>>> {
+    fn inner_ref_semver(
+        &self,
+    ) -> LockResult<ConsumedResult<impl MappableDeref<'_, Target = Self::Wrapped>>> {
         Ok(Ok(self.inner_ref()))
     }
 
     fn inner_mut_semver(
         &mut self,
-    ) -> LockResult<ConsumedResult<impl DerefMut<Target = Self::Wrapped>>> {
+    ) -> LockResult<ConsumedResult<impl MappableDerefMut<'_, Target = Self::Wrapped>>> {
         Ok(Ok(self.inner_mut()))
     }
 
@@ -303,13 +411,15 @@ impl<T> PyWrapperSemverExt for PyWrapper<PyWrapperT0<T>> {
 impl<T> PyWrapperSemverExt for PyWrapper<PyWrapperT1<T>> {
     type Wrapped = T;
 
-    fn inner_ref_semver(&self) -> LockResult<ConsumedResult<impl Deref<Target = Self::Wrapped>>> {
+    fn inner_ref_semver(
+        &self,
+    ) -> LockResult<ConsumedResult<impl MappableDeref<'_, Target = Self::Wrapped>>> {
         self.lock_inner_ref().map(Ok)
     }
 
     fn inner_mut_semver(
         &mut self,
-    ) -> LockResult<ConsumedResult<impl DerefMut<Target = Self::Wrapped>>> {
+    ) -> LockResult<ConsumedResult<impl MappableDerefMut<'_, Target = Self::Wrapped>>> {
         self.lock_inner_mut().map(Ok)
     }
 
@@ -321,13 +431,15 @@ impl<T> PyWrapperSemverExt for PyWrapper<PyWrapperT1<T>> {
 impl<T> PyWrapperSemverExt for PyWrapper<PyWrapperT2<T>> {
     type Wrapped = T;
 
-    fn inner_ref_semver(&self) -> LockResult<ConsumedResult<impl Deref<Target = Self::Wrapped>>> {
+    fn inner_ref_semver(
+        &self,
+    ) -> LockResult<ConsumedResult<impl MappableDeref<'_, Target = Self::Wrapped>>> {
         self.try_lock_inner_ref()
     }
 
     fn inner_mut_semver(
         &mut self,
-    ) -> LockResult<ConsumedResult<impl DerefMut<Target = Self::Wrapped>>> {
+    ) -> LockResult<ConsumedResult<impl MappableDerefMut<'_, Target = Self::Wrapped>>> {
         self.try_lock_inner_mut()
     }
 
@@ -340,21 +452,24 @@ impl<T> PyWrapperSemverExt for PyWrapper<PyWrapperT2<T>> {
 /// where a method of `T` can obtain a `&Ref`, and we will implement [Deref<Target=Ref>] for this [PyClass].
 pub use std::ops::{Deref, DerefMut};
 
-/// In the future, we will provide a macro for this trait to automatically generate pymethod
+/// TODO: In the future, we will provide a macro for this trait to automatically generate pymethod
 pub trait PyMatchRef {
     type Output;
 
     fn match_ref(&self) -> Self::Output;
 }
 
-/// In the future, we will provide a macro for this trait to automatically generate pymethod
+/// TODO: In the future, we will provide a macro for this trait to automatically generate pymethod
 pub trait PyMatchMut {
     type Output;
 
     fn match_mut(&mut self) -> Self::Output;
 }
 
-/// In the future, we will provide a macro for this trait to automatically generate pymethod
+/// TODO: In the future, we will provide a macro for this trait to automatically generate pymethod
+///
+/// It is recommended to implement this trait only when using `clone` in [PyMatchRef]/[PyMatchMut]
+/// would significantly impact memory/performance.
 pub trait PyMatchInto {
     type Output;
 

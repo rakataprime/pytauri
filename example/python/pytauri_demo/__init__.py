@@ -31,10 +31,8 @@ class Greeting(BaseModel):
 
 @commands.register()
 async def greet(body: Person, app_handle: AppHandle) -> Greeting:
-    notification_ext = NotificationExt(app_handle)
-    notification = notification_ext.notification()
-
-    notification.builder().show(
+    notification_builder = NotificationExt.builder(app_handle)
+    notification_builder.show(
         NotificationBuilderArgs(title="Greeting", body=f"Hello, {body.name}!")
     )
 
