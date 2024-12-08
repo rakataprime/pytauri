@@ -5,6 +5,9 @@ edition = { workspace = true }
 license = { workspace = true }
 rust-version = { workspace = true }
 
+[features]
+standalone = ["dep:libc"] # MPL2.0
+
 [dependencies]
 tauri = { workspace = true }
 tauri-plugin-pytauri = { workspace = true }
@@ -12,3 +15,4 @@ pytauri-core = { workspace = true }
 
 pyo3 = { workspace = true }
 pyo3-utils = { workspace = true }
+libc = { workspace = true, optional = true }

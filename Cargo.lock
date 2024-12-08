@@ -2867,6 +2867,7 @@ dependencies = [
 name = "pytauri"
 version = "0.1.0"
 dependencies = [
+ "libc",
  "pyo3",
  "pyo3-utils",
  "pytauri-core",

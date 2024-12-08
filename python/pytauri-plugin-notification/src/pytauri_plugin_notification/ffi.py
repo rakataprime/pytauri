@@ -36,6 +36,15 @@ if TYPE_CHECKING:
 
     @final
     class NotificationBuilder:
+        """
+        FIXME, XXX, TODO:
+
+        See: <https://github.com/tauri-apps/tauri/issues/3700>
+        On windows, we must install the package via the `.msi` or `nsis`, or `tauri-plugin-notification` will not work.
+
+        Tracker issue: <https://github.com/tauri-apps/plugins-workspace/issues/2156>
+        """
+
         def show(self, args: NotificationBuilderArgs, /) -> None: ...
 
     @final

@@ -3,9 +3,9 @@ version = "0.1.0"
 identifier = "com.pytauri-demo.app"
 
 [build]
-beforeDevCommand = "pnpm dev"
+beforeDevCommand = "pnpm -F=pytauri-demo dev"
 devUrl = "http://localhost:1420"
-beforeBuildCommand = "pnpm build"
+beforeBuildCommand = "pnpm -F=pytauri-demo build"
 frontendDist = "./front/dist"
 
 [app]
@@ -20,12 +20,12 @@ height = 600
 # csp =
 
 [bundle]
-active = false  # `pytauri` doesn't support bundling
+active = false # `bundle` only supported on Windows for now
 targets = "all"
 icon = [
   "icons/32x32.png",
   "icons/128x128.png",
   "icons/128x128@2x.png",
   "icons/icon.icns",
-  "icons/icon.ico"
+  "icons/icon.ico",
 ]

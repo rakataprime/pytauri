@@ -16,6 +16,7 @@
 [notification]: https://docs.rs/tauri-plugin-notification/latest/tauri_plugin_notification/
 
 - Need Rust compiler, but **don't need to write Rust code**!
+- Can be integrated with `tauri-cli` to [build and package standalone executables](./docs/standalone.md)!
 - No IPC (inter-process communication) overhead, secure and fast, thanks to [Pyo3]!
 - Support Tauri official plugins(e.g., [notification]), and you can write your own plugins!
 

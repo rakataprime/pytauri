@@ -1,3 +1,8 @@
+#[cfg(feature = "standalone")]
+mod pyembed;
+#[cfg(feature = "standalone")]
+pub mod standalone;
+
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyModule, PyTuple};
 use pyo3::wrap_pymodule;

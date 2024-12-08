@@ -17,7 +17,7 @@ crate-type = ["cdylib", "lib"]
 pyo3 = { workspace = true }
 
 tauri = { workspace = true, features = ["devtools", "config-toml"] }
-pytauri = { workspace = true }
+pytauri = { workspace = true, features = ["standalone"] }
 tauri-plugin-pytauri = { workspace = true }
 
 tauri-plugin-shell = "2"
