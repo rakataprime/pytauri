@@ -32,7 +32,16 @@ fn main() -> Result<(), PyErr> {
             prepare_freethreaded_python_with_executable(python_executable)
                 .expect("failed to initialize embedded python");
         }
-        #[cfg(not(windows))]
+        #[cfg(target_os = "linux")]
+        {
+            use std::path::PathBuf;
+            let app_name = "pytauri-demo"; // NOTE: set it by yourself
+            let resource_dir: PathBuf = format!("/usr/lib/{}/", app_name).into();
+            let python_executable = resource_dir.join("bin/python3");
+            prepare_freethreaded_python_with_executable(python_executable)
+                .expect("failed to initialize embedded python");
+        }
+        #[cfg(target_os = "macos")]
         {
             todo!("Support for other platforms is still being implemented");
         }
