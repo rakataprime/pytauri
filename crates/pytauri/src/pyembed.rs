@@ -112,7 +112,7 @@ pub(crate) use error::{NewInterpreterError, NewInterpreterResult};
 pub(crate) mod utils {
     use super::*;
     #[cfg(target_family = "unix")]
-    use std::{ffi::NulError, os::unix::ffi::OsStrExt};
+    use std::{ffi::CString, os::unix::ffi::OsStrExt};
 
     #[cfg(target_family = "windows")]
     use std::os::windows::prelude::OsStrExt;
