@@ -2,7 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::env::var;
-use std::path::Path;
 
 use pyo3::prelude::*;
 use pyo3::wrap_pymodule;
@@ -27,8 +26,9 @@ fn main() -> Result<(), PyErr> {
     } else {
         #[cfg(windows)]
         {
+            use std::path::absolute;
             // The embedded Python and the pytauri app are in the same directory
-            let python_executable = Path::new("python.exe").canonicalize().unwrap();
+            let python_executable = absolute("python.exe").unwrap();
             prepare_freethreaded_python_with_executable(python_executable)
                 .expect("failed to initialize embedded python");
         }

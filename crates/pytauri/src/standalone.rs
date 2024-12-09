@@ -1,6 +1,6 @@
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::{absolute, Path, PathBuf};
 
 use pyo3::ffi as pyffi;
 use pyo3::ffi::c_str;
@@ -118,7 +118,7 @@ impl Drop for PyConfig {
 
 /// # Panics
 ///
-/// Panics if the path cannot be canonicalized.
+/// Panics if [std::path::absolute] fails.
 pub fn get_python_executable_from_venv(venv_path: impl Into<PathBuf>) -> PathBuf {
     let mut venv_path: PathBuf = venv_path.into();
     #[cfg(unix)]
@@ -127,9 +127,11 @@ pub fn get_python_executable_from_venv(venv_path: impl Into<PathBuf>) -> PathBuf
     venv_path.push(r"Scripts\python.exe");
     #[cfg(not(any(unix, windows)))]
     unimplemented!();
-    venv_path
-        .canonicalize()
-        .expect("failed to canonicalize python executable path")
+    // NOTE: Use [std::path::absolute] instead of [Path::canonicalize].
+    // On Unix, the Python executable in the virtual environment is actually a symbolic link,
+    // [canonicalize] will resolve the symbolic link,
+    // causing the path to be set to the system-level Python interpreter.
+    absolute(&venv_path).expect("failed to get absolute path")
 }
 
 /// See:
