@@ -1,26 +1,28 @@
 use std::fs;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use pyo3::ffi as pyffi;
 use pyo3::ffi::c_str;
 use pyo3::prelude::*;
-pub use pyo3::prepare_freethreaded_python;
+use pyo3::prepare_freethreaded_python;
 use pyo3::types::PyModule;
 
 use crate::pyembed::{utils, NewInterpreterError, NewInterpreterResult};
 
-#[expect(dead_code)] // TODO: remove this attribute
-enum PyConfigProfile {
+#[non_exhaustive]
+pub enum PyConfigProfile {
     Python,
     Isolated,
 }
 
-struct PyConfig(pyffi::PyConfig);
+pub struct PyConfig(pyffi::PyConfig);
 
+/// NOTE: You can only use [PyConfig] before using [pyo3::prepare_freethreaded_python],
+/// otherwise it is an invalid operation
 // ref: <https://github.com/indygreg/PyOxidizer/blob/1ceca8664c71f39e849ce4873e00d821504b32bd/pyembed/src/interpreter_config.rs#L252-L619>
 impl PyConfig {
-    fn new(profile: PyConfigProfile) -> Self {
+    pub fn new(profile: PyConfigProfile) -> Self {
         let mut config: pyffi::PyConfig = unsafe { std::mem::zeroed() };
 
         unsafe {
@@ -33,11 +35,11 @@ impl PyConfig {
         Self(config)
     }
 
-    fn set_prefix(&mut self, prefix: &Path) -> NewInterpreterResult<()> {
+    pub fn set_prefix(&mut self, prefix: &Path) -> NewInterpreterResult<()> {
         utils::set_config_string_from_path(&self.0, &self.0.prefix, prefix, "setting prefix")
     }
 
-    fn set_base_prefix(&mut self, base_prefix: &Path) -> NewInterpreterResult<()> {
+    pub fn set_base_prefix(&mut self, base_prefix: &Path) -> NewInterpreterResult<()> {
         utils::set_config_string_from_path(
             &self.0,
             &self.0.base_prefix,
@@ -46,7 +48,7 @@ impl PyConfig {
         )
     }
 
-    fn set_exec_prefix(&mut self, exec_prefix: &Path) -> NewInterpreterResult<()> {
+    pub fn set_exec_prefix(&mut self, exec_prefix: &Path) -> NewInterpreterResult<()> {
         utils::set_config_string_from_path(
             &self.0,
             &self.0.exec_prefix,
@@ -55,7 +57,7 @@ impl PyConfig {
         )
     }
 
-    fn set_base_exec_prefix(&mut self, base_exec_prefix: &Path) -> NewInterpreterResult<()> {
+    pub fn set_base_exec_prefix(&mut self, base_exec_prefix: &Path) -> NewInterpreterResult<()> {
         utils::set_config_string_from_path(
             &self.0,
             &self.0.base_exec_prefix,
@@ -64,8 +66,29 @@ impl PyConfig {
         )
     }
 
+    pub fn set_program_name(&mut self, program_name: &Path) -> NewInterpreterResult<()> {
+        utils::set_config_string_from_path(
+            &self.0,
+            &self.0.program_name,
+            program_name,
+            "setting program_name",
+        )
+    }
+
+    pub fn set_executable(&mut self, executable: &Path) -> NewInterpreterResult<()> {
+        utils::set_config_string_from_path(
+            &self.0,
+            &self.0.executable,
+            executable,
+            "setting executable",
+        )
+    }
+
+    /// After calling this method, the Python interpreter has already been initialized,
+    /// so [pyo3::prepare_freethreaded_python] is a no-op.
+    /// But you still need to call it to let pyo3 know that the interpreter has been initialized.
     // ref: <https://github.com/indygreg/PyOxidizer/blob/1ceca8664c71f39e849ce4873e00d821504b32bd/pyembed/src/interpreter.rs#L130-L255>
-    fn init(self) -> NewInterpreterResult<()> {
+    pub fn init(self) -> NewInterpreterResult<()> {
         let status = unsafe { pyffi::Py_InitializeFromConfig(&self.0) };
         if unsafe { pyffi::PyStatus_Exception(status) } != 0 {
             return Err(NewInterpreterError::new_from_pystatus(
@@ -93,49 +116,44 @@ impl Drop for PyConfig {
     }
 }
 
-fn get_pythonhome_from_pyvenv_cfg(venv_path: &Path) -> Option<String> {
-    let pyvenv_cfg = venv_path.join("pyvenv.cfg");
-    let cfg = fs::read_to_string(pyvenv_cfg).ok()?;
-    // cfg example:
-    //
-    // ```
-    // home = C:\Users\UserName\AppData\Local\Programs\Python\Python310
-    // implementation = CPython
-    // uv = 0.5.4
-    // version_info = 3.10.8
-    // include-system-site-packages = false
-    // prompt = pytauri-workspace
-    // ```
-    let pythonhome = cfg.lines().find(|line| line.starts_with("home"))?;
-    let pythonhome = pythonhome.split('=').nth(1)?.trim();
-    Some(pythonhome.to_owned())
-}
-
-/// see:
-/// - <https://github.com/PyO3/pyo3/issues/3589>
-/// - <https://github.com/PyO3/pyo3/issues/1896>
-///
-/// pyo3 currently cannot automatically detect the virtual environment and configure pyconfig, so we need this function.
-///
 /// # Panics
 ///
-/// This function will panic if it cannot find the python home from `pyvenv.cfg`.
-pub fn prepare_freethreaded_python_venv(venv_path: impl AsRef<Path>) -> NewInterpreterResult<()> {
-    let venv_path = venv_path.as_ref();
+/// Panics if the path cannot be canonicalized.
+pub fn get_python_executable_from_venv(venv_path: impl Into<PathBuf>) -> PathBuf {
+    let mut venv_path: PathBuf = venv_path.into();
+    #[cfg(unix)]
+    venv_path.push("bin/python3");
+    #[cfg(windows)]
+    venv_path.push(r"Scripts\python.exe");
+    #[cfg(not(any(unix, windows)))]
+    unimplemented!();
+    venv_path
+        .canonicalize()
+        .expect("failed to canonicalize python executable path")
+}
 
-    let pythonhome = get_pythonhome_from_pyvenv_cfg(venv_path)
-        .expect("Cannot find python home from `pyvenv.cfg`, please check your python venv");
-    let pythonhome = Path::new(&pythonhome);
+/// See:
+///
+/// - <https://docs.python.org/3/c-api/intro.html#embedding-python>
+/// - <https://docs.python.org/3/c-api/init_config.html#python-path-configuration>
+///
+/// > The embedding application can steer the search by setting PyConfig.program_name before calling Py_InitializeFromConfig().
+///
+/// Once you set `program_name` and `executable` to the actual Python executable,
+/// the Python interpreter will automatically set other paths, such as `prefix` and so on,
+/// then the std lib and site-packages will be found correctly.
+///
+/// NOTE: the `executable` must be absolute path.
+pub fn prepare_freethreaded_python_with_executable(
+    executable: impl AsRef<Path>,
+) -> NewInterpreterResult<()> {
+    let executable = executable.as_ref();
 
     let mut config = PyConfig::new(PyConfigProfile::Python);
-    config.set_prefix(venv_path)?;
-    config.set_exec_prefix(venv_path)?;
-    config.set_base_prefix(pythonhome)?;
-    config.set_base_exec_prefix(pythonhome)?;
+    config.set_program_name(executable)?;
+    config.set_executable(executable)?;
     config.init()?;
 
-    // At this point, the Python interpreter has already been initialized, so this is a no-op,
-    // but we still need to call it to let pyo3 know that we have initialized the Python interpreter.
     prepare_freethreaded_python();
     Ok(())
 }
