@@ -49,7 +49,7 @@ Please download the [Python version](https://github.com/indygreg/python-build-st
 
 - `cpython-*-x86_64-pc-windows-msvc-install_only_stripped.tar.gz`
 - `cpython-*-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz`
-- `cpython-*-x86_64-apple-darwin-install_only.tar.gz`
+- `cpython-*-x86_64-apple-darwin-install_only_stripped.tar.gz`
 
 Extract it to `example\pyembed`.
 
@@ -162,8 +162,8 @@ Debian:
 
 ```bash
 # - After installation, the embedded Python will be located in `/usr/lib/pytauri-demo/`
-# - `/pyembed/python/lib` is not in the default search path, so `-L` is needed to specify it
-# - `pytauri-demo` is your app name.
+# - `example/pyembed/python/lib/libpython3.*.so` is not in the default search path, so `-L` is needed to specify it
+# - `pytauri-demo` is your app productName.
 export RUSTFLAGS=" \
     -C link-arg=-Wl,-rpath,/usr/lib/pytauri-demo/lib \
     -L <Absolute Path>/example/pyembed/python/lib"

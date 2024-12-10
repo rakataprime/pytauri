@@ -35,8 +35,14 @@ fn main() -> Result<(), PyErr> {
         #[cfg(target_os = "linux")]
         {
             use std::path::PathBuf;
-            let app_name = "pytauri-demo"; // NOTE: set it by yourself
-            let resource_dir: PathBuf = format!("/usr/lib/{}/", app_name).into();
+            // NOTE: set it to your `productName` in `Tauri.toml`
+            let product_name = "pytauri-demo";
+            // The resource directory specified by tauri-cli when packaging in Debian.
+            // But this is a bit hacky because this is not the documented behavior of tauri-cli,
+            // we need to contact the tauri developers.
+            // See also: <https://github.com/WSH032/pytauri/commit/b0c754aed9e7095c0a994978cbe191cf56022158#diff-8aa8e83ff3b2189fd6397149a7b274f82daede3923191a3d0409f72a2f8bb78fR39>
+            let resource_dir: PathBuf = format!("/usr/lib/{}/", product_name).into();
+            // the bundled Python executable in the resource directory
             let python_executable = resource_dir.join("bin/python3");
             prepare_freethreaded_python_with_executable(python_executable)
                 .expect("failed to initialize embedded python");
