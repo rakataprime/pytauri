@@ -10,7 +10,7 @@ use std::{
 use pyo3::prelude::*;
 
 pub use py::PyFuture;
-pub use rust::{RustFuture, CancelOnDrop};
+pub use rust::{CancelOnDrop, RustFuture};
 
 #[derive(Debug)]
 pub struct AllowThreads<F>(pub F);
