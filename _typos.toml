@@ -1,0 +1,5 @@
+# see: <https://github.com/crate-ci/typos/tree/d1c850b2b5d502763520c25fb4a6a1128ad99bd9?tab=readme-ov-file#typos>
+
+[files]
+# TODO, FIXME: The typos here are issues from tauri
+extend-exclude = ["**/gen/schemas/*.json"]

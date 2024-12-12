@@ -1,0 +1,89 @@
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: no-commit-to-branch
+      - id: check-added-large-files
+      - id: check-toml
+      - id: check-json
+        exclude: (^|/)\.vscode(/.*|$)|.*tsconfig.* # json5
+      - id: check-yaml
+        args:
+          - --unsafe
+        exclude: pnpm-lock.yaml
+      - id: end-of-file-fixer
+        exclude: .*\/schemas\/.*\.json # generated automatically by `tauri-cli`
+      - id: trailing-whitespace
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.19.0
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        # NOTE: the dependencies must consistent with `commitlint.config.js`
+        additional_dependencies: ["@commitlint/config-conventional"]
+  - repo: local
+    hooks:
+      - id: python-fmt
+        stages: [pre-commit]
+        name: python format
+        language: script
+        types: [python]
+        entry: scripts/python-fmt.sh
+        pass_filenames: false
+      - id: rust-fmt
+        stages: [pre-commit]
+        name: rust format
+        language: system
+        types: [rust]
+        entry: cargo fmt --all
+        pass_filenames: false
+      - id: typos
+        stages: [pre-commit]
+        name: typos
+        language: system
+        entry: typos -w
+        pass_filenames: false
+
+      - id: python-type-check
+        stages: [pre-commit]
+        name: python type check
+        language: system
+        types: [python]
+        entry: pnpm pyright .
+        pass_filenames: false
+
+      - id: python-verifytypes
+        stages: [manual] # because it's slow
+        name: python type check
+        language: script
+        types: [python]
+        entry: scripts/python-verifytypes.sh
+        pass_filenames: false
+      - id: cargo-clippy # rustup component add clippy
+        stages: [manual] # because it's slow
+        name: cargo clippy
+        language: system
+        types: [rust]
+        entry: cargo clippy --tests --all-features -- -D warnings
+        pass_filenames: false
+
+      - id: python-test
+        stages: [manual] # because it's slow
+        name: python test
+        language: script
+        types: [python]
+        # TODO: more tests
+        entry: scripts/python-test.sh
+        pass_filenames: false
+      - id: rust-test
+        stages: [manual] # because it's slow
+        name: rust test
+        language: system
+        types: [rust]
+        entry: cargo test --all --all-features
+        pass_filenames: false
+
+      # TODO, FIXME: typescript check
+      # TODO, FIXME: rust doc check

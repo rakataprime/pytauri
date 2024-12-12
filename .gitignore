@@ -3,3 +3,6 @@
 **/node_modules/
 target/
 .venv/
+
+.coverage
+coverage.xml
