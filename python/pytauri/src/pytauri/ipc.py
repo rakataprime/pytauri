@@ -1,35 +1,34 @@
-from typing import (
-    Callable,
-    Any,
-    cast,
-    Awaitable,
-    Union,
-    Optional,
-)
-from inspect import signature
-from functools import wraps, partial
 from collections import UserDict
-from typing import NamedTuple
+from collections.abc import Awaitable
+from functools import partial, wraps
+from inspect import signature
 from logging import getLogger
+from typing import (
+    Any,
+    Callable,
+    NamedTuple,
+    Optional,
+    Union,
+    cast,
+)
 
 from anyio.from_thread import BlockingPortal
-from typing_extensions import TypeVar
 from pydantic import BaseModel, ValidationError
+from typing_extensions import TypeVar
 
+from pytauri.ffi.ipc import ArgumentsType, Invoke, InvokeResolver, ParametersType
 from pytauri.ffi.lib import (
-    _InvokeHandlerProto,  # pyright: ignore[reportPrivateUsage]
     AppHandle,
+    _InvokeHandlerProto,  # pyright: ignore[reportPrivateUsage]
 )
-from pytauri.ffi.ipc import Invoke, InvokeResolver, ParametersType, ArgumentsType
-
 
 __all__ = [
+    "ArgumentsType",
     "Commands",
     "Invoke",
+    "InvokeException",
     "InvokeResolver",
     "ParametersType",
-    "ArgumentsType",
-    "InvokeException",
 ]
 
 _logger = getLogger(__name__)
@@ -53,9 +52,8 @@ class _PyInvokHandleData(NamedTuple):
     """The `handler` can receive the parameters specified by `parameters`"""
 
 
-class InvokeException(Exception):
-    """
-    When this exception is raised in a `Command`,
+class InvokeException(Exception):  # noqa: N818
+    """When this exception is raised in a `Command`,
     pytauri will return it to the frontend through `Invoke.reject(value)`
     and will not log the exception on the python side.
     """
@@ -121,8 +119,7 @@ class Commands(UserDict[str, _PyInvokHandleData]):
         self._async_invoke_handler = _async_invoke_handler
 
     def build_invoke_handler(self, portal: BlockingPortal) -> _InvokeHandlerProto:
-        """
-        NOTE: The `BlockingPortal` must remain valid while the returned
+        """NOTE: The `BlockingPortal` must remain valid while the returned
         `invoke_handler` is being used.
         """
         async_invoke_handler = self._async_invoke_handler
@@ -138,7 +135,7 @@ class Commands(UserDict[str, _PyInvokHandleData]):
         return invoke_handler
 
     @staticmethod
-    def wrap_pyfunc(
+    def wrap_pyfunc(  # noqa: C901  # TODO: simplify the method
         pyfunc: _WrappablePyHandlerType,
     ) -> _PyHandlerType:
         """Wrap a Callable to conform to the definition of PyHandlerType.
@@ -154,26 +151,26 @@ class Commands(UserDict[str, _PyInvokHandleData]):
         serializer = None
         deserializer = None
 
-        BODY_KEY = "body"
+        body_key = "body"
 
         sig = signature(pyfunc)
         parameters = sig.parameters
         return_annotation = sig.return_annotation
 
-        body_param = parameters.get(BODY_KEY)
+        body_param = parameters.get(body_key)
         if body_param is not None:
             if body_param.kind not in {
                 body_param.KEYWORD_ONLY,
                 body_param.POSITIONAL_OR_KEYWORD,
             }:
-                raise ValueError(f"Expected `{BODY_KEY}` to be KEYWORD_ONLY")
+                raise ValueError(f"Expected `{body_key}` to be KEYWORD_ONLY")
             body_type = body_param.annotation
             if issubclass(body_type, BaseModel):
                 serializer = body_type.model_validate_json
             else:
                 if not issubclass(body_type, bytearray):
                     raise ValueError(
-                        f"Expected `{BODY_KEY}` to be subclass of {BaseModel} or {bytearray}, "
+                        f"Expected `{body_key}` to be subclass of {BaseModel} or {bytearray}, "
                         f"got {body_type}"
                     )
 
@@ -194,13 +191,13 @@ class Commands(UserDict[str, _PyInvokHandleData]):
             nonlocal serializer, deserializer
 
             if serializer is not None:
-                body_bytearray = kwargs[BODY_KEY]
+                body_bytearray = kwargs[body_key]
                 assert isinstance(body_bytearray, bytearray)  # PERF
                 try:
                     body_model = serializer(body_bytearray)
                 except ValidationError as e:
-                    raise InvokeException(str(e))
-                kwargs[BODY_KEY] = body_model
+                    raise InvokeException(str(e)) from e
+                kwargs[body_key] = body_model
 
             resp = await pyfunc(*args, **kwargs)
 
@@ -214,7 +211,7 @@ class Commands(UserDict[str, _PyInvokHandleData]):
         new_parameters = None
         if serializer is not None:
             new_parameters = parameters.copy()
-            new_parameters[BODY_KEY] = parameters[BODY_KEY].replace(
+            new_parameters[body_key] = parameters[body_key].replace(
                 annotation=bytearray
             )
 
@@ -234,7 +231,8 @@ class Commands(UserDict[str, _PyInvokHandleData]):
         pyfunc: _PyHandlerType, /, check_signature: bool = True
     ) -> ParametersType:
         """Check if the `signature` conforms to [ArgumentsType],
-        and if the return value conforms to [bytes] or [bytearray]"""
+        and if the return value conforms to [bytes] or [bytearray]
+        """
         sig = signature(pyfunc)
         parameters = sig.parameters
         if not check_signature:

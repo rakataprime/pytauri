@@ -1,12 +1,12 @@
 # NOTE: DO NOT use third-party libraries in this file,
 # keep the minimal dependencies.
 
+import json
+import socket
+from logging import getLogger
 from os import getenv, getpid
 from textwrap import dedent
-import json
-from logging import getLogger
-from typing import Dict, TypedDict, Optional
-import socket
+from typing import Optional, TypedDict
 
 __all__ = ["debug"]
 
@@ -99,7 +99,7 @@ def debug() -> None:
 
         try:
             response = json.loads(response)
-            assert isinstance(response, Dict)
+            assert isinstance(response, dict)
         except Exception as e:
             _logger.warning(
                 f"Failed to parse response from lldb rpc server: {response}", exc_info=e

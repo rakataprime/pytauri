@@ -1,11 +1,11 @@
 from typing import (
-    Optional,
-    Union,
     TYPE_CHECKING,
-    final,
-    Callable,
     Any,
+    Callable,
+    Optional,
     Protocol,
+    Union,
+    final,
 )
 
 from typing_extensions import Self
@@ -79,8 +79,7 @@ if TYPE_CHECKING:
             context: "Context",
             invoke_handler: Optional[_InvokeHandlerProto] = None,
         ) -> Self:
-            """
-            NOTE: The implementer of `invoke_handler` must never raise an exception,
+            """NOTE: The implementer of `invoke_handler` must never raise an exception,
             otherwise it is considered undefined behavior. Additionally, it must not block.
             """
             ...

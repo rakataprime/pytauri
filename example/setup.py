@@ -5,7 +5,6 @@ from setuptools import (
 )
 from setuptools_rust import RustExtension
 
-
 ########## CONFIGURATION ##########
 
 PYTAURI_DEV = getenv("PYTAURI_DEV") == "1"
@@ -17,7 +16,7 @@ EXT_MOD = "pytauri_demo._ext_mod"
 ####################################
 
 
-def get_features():
+def get_features() -> list[str]:
     features = ["pyo3/extension-module"]
     if not PYTAURI_DEV:
         features.append("tauri/custom-protocol")

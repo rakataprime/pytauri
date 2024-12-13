@@ -1,23 +1,21 @@
-from typing import (
-    Protocol,
-    Any,
-    Type,
-    Generic,
-    Optional,
-    Awaitable,
-    Generator,
-)
+from collections import deque
+from collections.abc import Awaitable, Generator
 from contextlib import AsyncExitStack, contextmanager
 from threading import get_ident
-from collections import deque
-from weakref import ref, ReferenceType
 from types import TracebackType
+from typing import (
+    Any,
+    Generic,
+    Optional,
+    Protocol,
+)
+from weakref import ReferenceType, ref
 
+from anyio import CancelScope, create_task_group, get_cancelled_exc_class
+from anyio.abc import TaskGroup
+from anyio.from_thread import BlockingPortal, start_blocking_portal
 from exceptiongroup import BaseExceptionGroup
 from typing_extensions import Self, TypeVar
-from anyio.from_thread import BlockingPortal, start_blocking_portal
-from anyio import create_task_group, CancelScope, get_cancelled_exc_class
-from anyio.abc import TaskGroup
 
 __all__ = ["RunnerBuilder", "create_runner_builder"]
 
@@ -102,7 +100,7 @@ class _PyRunner:
         self._cancelled_exc_class = cancelled_exc_class
         self._event_loop_thread_id = event_loop_thread_id
 
-    def __call__(self, py_future: _PyFutureProto[Any], /) -> _CancelHandleProto:
+    def __call__(self, py_future: _PyFutureProto[Any], /) -> _CancelHandleProto:  # noqa: C901
         blocking_portal = self._blocking_portal
         task_group = self._task_group
         cancelled_exc_class = self._cancelled_exc_class
@@ -126,7 +124,7 @@ class _PyRunner:
                         # then `TaskGroup` will cancel all other tasks.
                         if isinstance(e, cancelled_exc_class):
                             is_cancelled = True
-                            raise e
+                            raise
                         return
                     else:
                         py_future.set_result(result)
@@ -172,7 +170,7 @@ class _PyRunner:
                     return
                 # If this happens, it means we forget to inform rust wake up the future,
                 # it will make the rust future wait forever.
-                assert False, "unreachable"
+                assert False, "unreachable"  # noqa: PT015, B011
 
             # NOTE: We don't care the return value (i.e, None),
             # and we should return as soon as possible so that don't block the thread.
@@ -199,7 +197,6 @@ class RunnerBuilder:
 
     async def __aenter__(self) -> Self:
         """Note: The context manager is not re-enterable."""
-
         # NOTE: init `_event_loop_thread_id` and so on in `__aenter__` method,
         # instead of `__init__` method,
         # so that we can require calling `__aenter__` before `build`.
@@ -218,7 +215,7 @@ class RunnerBuilder:
     async def __aexit__(self, *exc_info: Any) -> bool:
         return await self._exit_stack.__aexit__(*exc_info)
 
-    def build(self, runner_cls: Type[_RunnerTypeVar]) -> _RunnerTypeVar:
+    def build(self, runner_cls: type[_RunnerTypeVar]) -> _RunnerTypeVar:
         """NOTE: this method can be call thread-safely."""
         py_runner = _PyRunner(
             self.blocking_portal,

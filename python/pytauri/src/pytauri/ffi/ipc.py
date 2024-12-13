@@ -1,18 +1,17 @@
 from typing import (
-    Union,
     TYPE_CHECKING,
-    final,
     Any,
     Generic,
     Optional,
+    Union,
+    final,
 )
 
-from typing_extensions import TypeVar, TypedDict, ReadOnly
-
+from typing_extensions import ReadOnly, TypedDict, TypeVar
 
 from pytauri.ffi._ext_mod import pytauri_mod
 
-__all__ = ["Invoke", "InvokeResolver", "ParametersType", "ArgumentsType"]
+__all__ = ["ArgumentsType", "Invoke", "InvokeResolver", "ParametersType"]
 
 _ipc_mod = pytauri_mod.ipc
 

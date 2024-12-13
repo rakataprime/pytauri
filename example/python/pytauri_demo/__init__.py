@@ -1,18 +1,18 @@
 import sys
-from logging import getLogger, Logger
+from logging import Logger, getLogger
 
+from anyio.from_thread import start_blocking_portal
 from pydantic import BaseModel
 from pytauri import (
-    Commands,
     AppHandle,
+    BuilderArgs,
+    Commands,
     RunEvent,
     RunEventEnum,
     builder_factory,
     context_factory,
-    BuilderArgs,
 )
-from pytauri_plugin_notification import NotificationExt, NotificationBuilderArgs
-from anyio.from_thread import start_blocking_portal
+from pytauri_plugin_notification import NotificationBuilderArgs, NotificationExt
 
 __all__ = ["commands", "main"]
 

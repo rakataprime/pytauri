@@ -1,12 +1,11 @@
 from types import ModuleType
 
-
 # See: <https://pypi.org/project/backports.entry-points-selectable/>
 # and: <https://docs.python.org/3/library/importlib.metadata.html#entry-points>
 # Deprecated: once we no longer support versions Python 3.9, we can remove this dependency.
 from importlib_metadata import (
-    entry_points,  # pyright: ignore[reportUnknownVariableType]
     EntryPoint,
+    entry_points,  # pyright: ignore[reportUnknownVariableType]
 )
 
 __all__ = ["EXT_MOD", "pytauri_mod"]
@@ -22,8 +21,7 @@ def _load_ext_mod() -> ModuleType:
             # See: <https://packaging.python.org/en/latest/specifications/core-metadata/#core-metadata>
             # for more attributes of `dist`.
             name = ep.dist.name if ep.dist else "UNKNOWN"
-            ep = repr(ep)
-            msg_list.append((name, ep))
+            msg_list.append((name, repr(ep)))
 
         prefix = "\n    - "
         msg = prefix.join(f"{name}: {ep}" for name, ep in msg_list)

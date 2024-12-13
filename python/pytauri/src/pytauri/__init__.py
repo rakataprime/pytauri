@@ -11,7 +11,6 @@ from pytauri.ffi import (
     builder_factory,
     context_factory,
 )
-
 from pytauri.ipc import Commands
 
 __all__ = [
@@ -20,11 +19,11 @@ __all__ = [
     "AppHandle",
     "Builder",
     "BuilderArgs",
+    "Commands",
     "Context",
     "RunEvent",
     "RunEventEnum",
     "RunEventEnumType",
     "builder_factory",
     "context_factory",
-    "Commands",
 ]

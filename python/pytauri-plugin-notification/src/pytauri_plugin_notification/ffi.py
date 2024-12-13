@@ -1,14 +1,14 @@
-from typing import TYPE_CHECKING, Optional, final, Union
 from types import ModuleType
+from typing import TYPE_CHECKING, Optional, Union, final
 
+from pytauri import EXT_MOD, App, AppHandle
 from typing_extensions import Self
-from pytauri import EXT_MOD, AppHandle, App
 
 __all__ = [
-    "NotificationBuilderArgs",
-    "NotificationBuilder",
-    "NotificationExt",
     "ImplNotificationExt",
+    "NotificationBuilder",
+    "NotificationBuilderArgs",
+    "NotificationExt",
 ]
 
 
@@ -36,8 +36,7 @@ if TYPE_CHECKING:
 
     @final
     class NotificationBuilder:
-        """
-        FIXME, XXX, TODO:
+        """FIXME, XXX, TODO:
 
         See: <https://github.com/tauri-apps/tauri/issues/3700>
         On windows, we must install the package via the `.msi` or `nsis`, or `tauri-plugin-notification` will not work.

@@ -5,7 +5,7 @@ from typing_extensions import TypeVar
 _T = TypeVar("_T", infer_variance=True)
 
 if TYPE_CHECKING:
-    __all__ = ["PyMatchRefMixin", "PyMatchMutMixin", "PyMatchIntoMixin"]
+    __all__ = ["PyMatchIntoMixin", "PyMatchMutMixin", "PyMatchRefMixin"]
 
     class PyMatchRefMixin(Generic[_T]):
         """This class is only used to provide type annotations,

@@ -1,16 +1,17 @@
+from collections.abc import Awaitable
+from typing import Optional
+
+import pytest
+from anyio import Event
 from pyfuture import (
     RunnerBuilder,
     _PyRunnerProto,  # pyright: ignore[reportPrivateUsage]
 )
-from typing import Awaitable, Optional
-
 from typing_extensions import Self
-from anyio import Event
-import pytest
 
 
 @pytest.mark.anyio
-async def test_runner_builder():
+async def test_runner_builder() -> None:
     class Result:
         pass
 
@@ -30,9 +31,9 @@ async def test_runner_builder():
             self.result = result
             self.is_done.set()
 
-        def set_exception(self, exception: BaseException) -> None:
+        def set_exception(self, _exception: BaseException) -> None:
             self.is_done.set()
-            NotImplementedError()  # TODO: test awaitable exception
+            raise NotImplementedError()  # TODO: test awaitable exception
 
         def __init__(self) -> None:
             self.is_done = Event()
@@ -40,10 +41,10 @@ async def test_runner_builder():
     class MockRunner:
         closed = False
 
-        def __new__(cls, py_runner: _PyRunnerProto) -> Self:
+        def __new__(cls, _py_runner: _PyRunnerProto, /) -> Self:
             return super().__new__(cls)
 
-        def __init__(self, py_runner: _PyRunnerProto) -> None:
+        def __init__(self, py_runner: _PyRunnerProto, /) -> None:
             self.py_runner = py_runner
 
         def close(self) -> None:
