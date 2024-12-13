@@ -1,0 +1,220 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+
+site_name: pytauri
+site_url: https://WSH032.github.io/pytauri/
+
+repo_url: https://github.com/WSH032/pytauri/
+repo_name: WSH032/pytauri
+
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  icon:
+    logo: octicons/rocket-24 # TODO: new logo for pytauri
+  favicon: images/rocket-24.svg # TODO: new logo for pytauri
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.instant.preview
+    - navigation.top
+    - navigation.tabs
+    - navigation.path
+    # - navigation.expand
+    # - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - search.share
+    - navigation.footer
+    - content.action.edit
+    - content.action.view
+    - content.tabs.link
+    - content.tooltips
+  # https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/#system-preference
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.snippets
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  # - pymdownx.superfences:
+  #     custom_fences:
+  #       - name: mermaid
+  #         class: mermaid
+  #         format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+plugins:
+  # # for static build
+  # # see: https://squidfunk.github.io/mkdocs-material/setup/building-for-offline-usage/
+  # - offline
+  # - privacy
+  #
+  # # for optimized build
+  # see: https://squidfunk.github.io/mkdocs-material/setup/building-an-optimized-site/
+  # - optimize
+  - search
+  - gen-files:
+      scripts:
+        - utils/gen_ref_pages.py
+  # see: <https://mkdocstrings.github.io/recipes/#generate-a-literate-navigation-file>
+  - literate-nav:
+      # DO NOT change `SUMMARY.md`, it's used in `utils/gen_ref_pages.py`
+      nav_file: SUMMARY.md
+  - section-index
+  - mkdocstrings:
+      # Modified: https://github.com/mkdocstrings/python/blob/eaf9b8240069f7369f401fe048892043c8b173d3/mkdocs.yml#L140-L166
+      default_handler: python
+      handlers:
+        python:
+          import:
+            # see: https://mkdocstrings.github.io/python/usage/#import
+            - https://docs.python.org/3/objects.inv
+            - https://docs.pydantic.dev/latest/objects.inv
+            - https://anyio.readthedocs.io/en/stable/objects.inv
+            - https://typing-extensions.readthedocs.io/en/stable/objects.inv
+          options:
+            docstring_style: google
+            members_order: source
+            preload_modules:
+              # see: <https://mkdocstrings.github.io/python/usage/configuration/general/#preload_modules>
+              # set these also for `[options.paths]`
+              - codelldb
+              - pyo3_utils
+              - pytauri
+              - pytauri_plugin_notification
+            extensions:
+              # https://mkdocstrings.github.io/griffe-inherited-docstrings/
+              - griffe_inherited_docstrings
+              # https://mkdocstrings.github.io/griffe-pydantic/
+              - griffe_pydantic
+              # https://mkdocstrings.github.io/griffe-warnings-deprecated/
+              - griffe_warnings_deprecated
+            # https://mkdocstrings.github.io/python/usage/configuration/headings/#parameter_headings
+            parameter_headings: true
+            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_if_no_docstring
+            show_if_no_docstring: true
+            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/?h=merge_init_into_class#merge_init_into_class
+            docstring_options:
+              ignore_init_summary: true
+            merge_init_into_class: true
+            # https://mkdocstrings.github.io/python/usage/configuration/headings/?h=heading_level#show_root_heading
+            heading_level: 1
+            show_root_heading: true
+            # https://mkdocstrings.github.io/python/usage/configuration/members/?h=inherited_members#inherited_members
+            inherited_members: true
+            # https://mkdocstrings.github.io/python/usage/configuration/signatures/#signature_crossrefs
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_symbol_type_toc
+            show_symbol_type_toc: true
+            show_symbol_type_heading: true
+            # https://mkdocstrings.github.io/python/usage/configuration/members/?h=summary#summary
+            summary: true
+            # https://mkdocstrings.github.io/python/usage/configuration/signatures/?h=unwrap_annotated#unwrap_annotated
+            unwrap_annotated: true
+          paths:
+            # set these also for `[options.preload_modules]`
+            - python/codelldb/src
+            - python/pyo3-utils/src
+            - python/pytauri/src
+            - python/pytauri-plugin-notification/src
+
+  # Remember: https://github.com/timvink/mkdocs-git-revision-date-localized-plugin#note-when-using-build-environments
+  - git-revision-date-localized:
+      fallback_to_build_date: true
+      enable_creation_date: true
+      type: timeago
+  - git-committers:
+      repository: WSH032/pytauri
+      branch: main
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/WSH032/
+  # # TODO: docs versioning
+  # # see: https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/
+  # version:
+  #   provider: mike
+
+watch:
+  - python/
+  - README.md
+  - CONTRIBUTING.md
+  - CHANGELOG.md
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+
+# Don't change the name "reference/"
+# It's used in utils/gen_ref_pages.py
+nav:
+  - Home: index.md
+  - Usage:
+      - standalone: Usage/standalone.md
+  # DO NOT change `reference/`, it's used in `utils/gen_ref_pages.py`
+  - API Reference: reference/
+  - CONTRIBUTING:
+      - CONTRIBUTING/CONTRIBUTING.md
+  - CHANGELOG:
+      - CHANGELOG/CHANGELOG.md

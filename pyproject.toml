@@ -21,6 +21,9 @@ lint = [
 docs = [
     "mkdocs-material == 9.5.*",
     "mkdocstrings[python] == 0.27.*",
+    "griffe-inherited-docstrings == 1.1.*",
+    "griffe-pydantic == 1.1.*",
+    "griffe-warnings-deprecated == 1.1.*",
     "mkdocs-gen-files == 0.5.*",
     "mkdocs-literate-nav == 0.6.*",
     "mkdocs-section-index == 0.3.*",

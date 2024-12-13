@@ -114,7 +114,7 @@ uv pip install --exact \
 
 > Currently, we only support installing dependencies at compile time. In the future, we will support dynamic installation of dependencies at runtime.
 
-### configure tauri-cli
+### Configure tauri-cli
 
 Create a new `.\example\Tauri.standalone.json`:
 

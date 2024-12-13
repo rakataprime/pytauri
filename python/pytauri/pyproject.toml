@@ -11,6 +11,7 @@ dependencies = [
     # and: <https://docs.python.org/3/library/importlib.metadata.html#entry-points>
     # Deprecated: once we no longer support versions Python 3.9, we can remove this dependency.
     "importlib-metadata >= 3.6",
+    # workspaces
     "pyo3-utils",
 ]
 

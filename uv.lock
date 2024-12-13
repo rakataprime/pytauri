@@ -362,6 +362,42 @@ wheels = [
 ]
 
 [[package]]
+name = "griffe-inherited-docstrings"
+version = "1.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "griffe" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7c/9f/098599019b2715e1edad3618305b8acf253e2ee375cbd389507cb23a2a00/griffe_inherited_docstrings-1.1.1.tar.gz", hash = "sha256:d179b6a6b7dc260fb892ad5b857837afd6f9de6193fc26d14463c4e9975a0cd3", size = 24146 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/67/f9/51a3fd7460b95583ff470c7b4fd706bd21f3fda97d521f3770126dc6d1fc/griffe_inherited_docstrings-1.1.1-py3-none-any.whl", hash = "sha256:0cb613ade70793b3589c706269a2cc4ceb91cbc4cfdc651037839cb9506eabe6", size = 6008 },
+]
+
+[[package]]
+name = "griffe-pydantic"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "griffe" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8e/6b/351be1b24e7afb1d5185095870f7a88403db6edd7af644c253b6671fc81b/griffe_pydantic-1.1.0.tar.gz", hash = "sha256:9c5a701cc485dab087857c1ac960b44671acee5008aaae0752f610b2aa82b068", size = 36997 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9d/4d/a667697bbe0da8810470e71d1034932f3ec590e47719c9a0b7a3dc0e54cf/griffe_pydantic-1.1.0-py3-none-any.whl", hash = "sha256:ac9cc2d9b016cf302d8d9f577c9b3ca2793d88060f500d0b2a65f33a4a785cf1", size = 10284 },
+]
+
+[[package]]
+name = "griffe-warnings-deprecated"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "griffe" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7e/0e/f034e1714eb2c694d6196c75f77a02f9c69d19f9961c4804a016397bf3e5/griffe_warnings_deprecated-1.1.0.tar.gz", hash = "sha256:7bf21de327d59c66c7ce08d0166aa4292ce0577ff113de5878f428d102b6f7c5", size = 33260 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/43/4c/b7241f03ad1f22ec2eed33b0f90c4f8c949e3395c4b7488670b07225a20b/griffe_warnings_deprecated-1.1.0-py3-none-any.whl", hash = "sha256:e7b0e8bfd6e5add3945d4d9805b2a41c72409e456733965be276d55f01e8a7a2", size = 5854 },
+]
+
+[[package]]
 name = "identify"
 version = "2.6.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1007,6 +1043,9 @@ source = { virtual = "." }
 
 [package.dev-dependencies]
 dev = [
+    { name = "griffe-inherited-docstrings" },
+    { name = "griffe-pydantic" },
+    { name = "griffe-warnings-deprecated" },
     { name = "mkdocs-gen-files" },
     { name = "mkdocs-git-committers-plugin-2" },
     { name = "mkdocs-git-revision-date-localized-plugin" },
@@ -1028,6 +1067,9 @@ dev = [
     { name = "typos" },
 ]
 docs = [
+    { name = "griffe-inherited-docstrings" },
+    { name = "griffe-pydantic" },
+    { name = "griffe-warnings-deprecated" },
     { name = "mkdocs-gen-files" },
     { name = "mkdocs-git-committers-plugin-2" },
     { name = "mkdocs-git-revision-date-localized-plugin" },
@@ -1063,6 +1105,9 @@ workspaces = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "griffe-inherited-docstrings", specifier = "==1.1.*" },
+    { name = "griffe-pydantic", specifier = "==1.1.*" },
+    { name = "griffe-warnings-deprecated", specifier = "==1.1.*" },
     { name = "mkdocs-gen-files", specifier = "==0.5.*" },
     { name = "mkdocs-git-committers-plugin-2", specifier = "==2.4.*" },
     { name = "mkdocs-git-revision-date-localized-plugin", specifier = "==1.3.*" },
@@ -1084,6 +1129,9 @@ dev = [
     { name = "typos", specifier = "==1.28.2" },
 ]
 docs = [
+    { name = "griffe-inherited-docstrings", specifier = "==1.1.*" },
+    { name = "griffe-pydantic", specifier = "==1.1.*" },
+    { name = "griffe-warnings-deprecated", specifier = "==1.1.*" },
     { name = "mkdocs-gen-files", specifier = "==0.5.*" },
     { name = "mkdocs-git-committers-plugin-2", specifier = "==2.4.*" },
     { name = "mkdocs-git-revision-date-localized-plugin", specifier = "==1.3.*" },
