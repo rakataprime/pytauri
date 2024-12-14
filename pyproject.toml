@@ -10,8 +10,8 @@ dev = [
     { include-group = "docs" },
     { include-group = "test" },
     { include-group = "tools" },
-    { include-group = "setup" },
     { include-group = "workspaces" },
+    { include-group = "example" },
 ]
 lint = [
     # `pyright` installed by `pnpm`
@@ -37,13 +37,30 @@ test = [
     "trio == 0.27.0",          # for `pyfuture`
 ]
 tools = ["pre-commit == 4.0.1"]
-setup = ["setuptools >= 64", "setuptools-scm >= 8", "setuptools-rust"]
-workspaces = ["pytauri-demo", "pyfuture"]
+# NOTE: when adding workspace members,
+# remember to update `preload_modules` in `mkdocs.yml`.
+workspaces = [
+    "codelldb",
+    "pyfuture",
+    "pyo3-utils",
+    "pytauri",
+    "pytauri-plugin-notification",
+]
+example = [
+    "setuptools >= 64",
+    "setuptools-scm >= 8",
+    "setuptools-rust == 1.*",
+    "pytauri-demo",
+]
 
 
 [tool.uv.sources]
 pytauri-demo = { workspace = true }
+codelldb = { workspace = true }
 pyfuture = { workspace = true }
+pyo3-utils = { workspace = true }
+pytauri = { workspace = true }
+pytauri-plugin-notification = { workspace = true }
 
 # https://docs.astral.sh/uv/concepts/workspaces/
 [tool.uv.workspace]
@@ -61,14 +78,14 @@ docstring-code-format = true
 # https://docs.astral.sh/ruff/rules/
 [tool.ruff.lint]
 select = [
-    "E",      # pycodestyle errors
-    "W",      # pycodestyle warnings
-    "F",      # pyflakes
-    "I",      # isort
-    "C4",     # flake8-comprehensions
-    "B",      # flake8-bugbear
-    "N",      # pep8-naming
-    "UP",     # pyupgrade
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C4", # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "N",  # pep8-naming
+    "UP", # pyupgrade
     # "D",      # pydocstyle  # TODO, FIXME, XXX: we enable these lints later
     "SIM",    # flake8-simplify
     "RUF",    # unused-noqa

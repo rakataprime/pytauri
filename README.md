@@ -1,9 +1,26 @@
+<!-- The content will be also use in `docs/index.md` by `pymdownx.snippets` -->
+<!-- Do not use any **relative link** and  **GitHub-specific syntax** ！-->
+<!-- Do not rename or move the file -->
+
 # PyTauri
 
-[Tauri] bindings for Python through [Pyo3].
+[Tauri] bindings for Python through [Pyo3]
 
 [Tauri]: https://github.com/tauri-apps/tauri
 [Pyo3]: https://github.com/PyO3/pyo3
+
+---
+
+[![CI: docs]][CI: docs#link]
+
+Documentation: <https://wsh032.github.io/pytauri/>
+
+Source Code: <https://github.com/WSH032/pytauri/>
+
+[CI: docs]: https://github.com/WSH032/pytauri/actions/workflows/docs.yml/badge.svg
+[CI: docs#link]: https://github.com/WSH032/pytauri/actions/workflows/docs.yml
+
+---
 
 > [!NOTE]
 >
@@ -56,7 +73,7 @@
 
     - Frontend
 
-        ```tsx
+        ```ts
         import { pyInvoke, fromJson } from "tauri-plugin-pytauri-api";
 
         export interface Person {
@@ -126,6 +143,7 @@ source .venv/bin/activate  # bash/zsh
 uv pip install setuptools setuptools-rust setuptools-scm
 # install demo
 uv sync \
+    --only-group=example \
     --no-build-isolation-package=pytauri-demo \
     --reinstall-package=pytauri-demo
 ```

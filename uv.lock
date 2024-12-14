@@ -1043,6 +1043,7 @@ source = { virtual = "." }
 
 [package.dev-dependencies]
 dev = [
+    { name = "codelldb" },
     { name = "griffe-inherited-docstrings" },
     { name = "griffe-pydantic" },
     { name = "griffe-warnings-deprecated" },
@@ -1055,7 +1056,10 @@ dev = [
     { name = "mkdocstrings", extra = ["python"] },
     { name = "pre-commit" },
     { name = "pyfuture" },
+    { name = "pyo3-utils" },
+    { name = "pytauri" },
     { name = "pytauri-demo" },
+    { name = "pytauri-plugin-notification" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-timeout" },
@@ -1078,14 +1082,15 @@ docs = [
     { name = "mkdocs-section-index" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
-lint = [
-    { name = "ruff" },
-    { name = "typos" },
-]
-setup = [
+example = [
+    { name = "pytauri-demo" },
     { name = "setuptools" },
     { name = "setuptools-rust" },
     { name = "setuptools-scm" },
+]
+lint = [
+    { name = "ruff" },
+    { name = "typos" },
 ]
 test = [
     { name = "pytest" },
@@ -1097,14 +1102,18 @@ tools = [
     { name = "pre-commit" },
 ]
 workspaces = [
+    { name = "codelldb" },
     { name = "pyfuture" },
-    { name = "pytauri-demo" },
+    { name = "pyo3-utils" },
+    { name = "pytauri" },
+    { name = "pytauri-plugin-notification" },
 ]
 
 [package.metadata]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "codelldb", editable = "python/codelldb" },
     { name = "griffe-inherited-docstrings", specifier = "==1.1.*" },
     { name = "griffe-pydantic", specifier = "==1.1.*" },
     { name = "griffe-warnings-deprecated", specifier = "==1.1.*" },
@@ -1117,13 +1126,16 @@ dev = [
     { name = "mkdocstrings", extras = ["python"], specifier = "==0.27.*" },
     { name = "pre-commit", specifier = "==4.0.1" },
     { name = "pyfuture", editable = "python/pyfuture" },
+    { name = "pyo3-utils", editable = "python/pyo3-utils" },
+    { name = "pytauri", editable = "python/pytauri" },
     { name = "pytauri-demo", editable = "example" },
+    { name = "pytauri-plugin-notification", editable = "python/pytauri-plugin-notification" },
     { name = "pytest", specifier = "==8.3.*" },
     { name = "pytest-cov", specifier = "==6.0.*" },
     { name = "pytest-timeout", specifier = "==2.3.*" },
     { name = "ruff", specifier = "==0.8.3" },
     { name = "setuptools", specifier = ">=64" },
-    { name = "setuptools-rust" },
+    { name = "setuptools-rust", specifier = "==1.*" },
     { name = "setuptools-scm", specifier = ">=8" },
     { name = "trio", specifier = "==0.27.0" },
     { name = "typos", specifier = "==1.28.2" },
@@ -1140,14 +1152,15 @@ docs = [
     { name = "mkdocs-section-index", specifier = "==0.3.*" },
     { name = "mkdocstrings", extras = ["python"], specifier = "==0.27.*" },
 ]
+example = [
+    { name = "pytauri-demo", editable = "example" },
+    { name = "setuptools", specifier = ">=64" },
+    { name = "setuptools-rust", specifier = "==1.*" },
+    { name = "setuptools-scm", specifier = ">=8" },
+]
 lint = [
     { name = "ruff", specifier = "==0.8.3" },
     { name = "typos", specifier = "==1.28.2" },
-]
-setup = [
-    { name = "setuptools", specifier = ">=64" },
-    { name = "setuptools-rust" },
-    { name = "setuptools-scm", specifier = ">=8" },
 ]
 test = [
     { name = "pytest", specifier = "==8.3.*" },
@@ -1157,8 +1170,11 @@ test = [
 ]
 tools = [{ name = "pre-commit", specifier = "==4.0.1" }]
 workspaces = [
+    { name = "codelldb", editable = "python/codelldb" },
     { name = "pyfuture", editable = "python/pyfuture" },
-    { name = "pytauri-demo", editable = "example" },
+    { name = "pyo3-utils", editable = "python/pyo3-utils" },
+    { name = "pytauri", editable = "python/pytauri" },
+    { name = "pytauri-plugin-notification", editable = "python/pytauri-plugin-notification" },
 ]
 
 [[package]]
