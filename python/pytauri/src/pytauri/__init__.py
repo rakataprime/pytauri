@@ -1,3 +1,5 @@
+"""[tauri::self](https://docs.rs/tauri/latest/tauri/index.html)"""
+
 from pytauri.ffi import (
     EXT_MOD,
     App,

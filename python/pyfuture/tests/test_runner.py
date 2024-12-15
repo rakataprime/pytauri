@@ -1,3 +1,6 @@
+# TODO:
+# ruff: noqa: D100, D103
+
 from collections.abc import Awaitable
 from typing import Optional
 

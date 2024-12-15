@@ -1,3 +1,5 @@
+"""[tauri::self](https://docs.rs/tauri/latest/tauri/index.html)"""
+
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -8,7 +10,7 @@ from typing import (
     final,
 )
 
-from typing_extensions import Self
+from typing_extensions import Self, TypeAlias
 
 from pytauri.ffi._ext_mod import pytauri_mod
 
@@ -41,18 +43,27 @@ if TYPE_CHECKING:
 
     @final
     class App:
-        """NOTE: This class is not thread-safe, and should not be shared between threads.
+        """[Tauri::app](https://docs.rs/tauri/latest/tauri/struct.App.html)
 
-        - You can only use it on the thread it was created on (must be the main thread on macOS)
-        - And you need to ensure it is garbage collected on the thread it was created on,
-            otherwise it will cause memory leaks
+        !!! warning
+            This class is not thread-safe, and should not be shared between threads.
+
+            - You can only use it on the thread it was created on.
+            - And you need to ensure it is garbage collected on the thread it was created on,
+                otherwise it will cause memory leaks.
         """
 
         def run(self, callback: Optional[_AppRunCallbackType] = None, /) -> None:
-            """Consume and run this app, will run until the app is exited.
+            """Consume and run this app, will block until the app is exited.
 
-            NOTE: If `callback` is specified, it must not raise an exception,
-            otherwise it is undefined behavior, and in most cases, the program will panic.
+            Args:
+                callback: a callback function that will be called on each event.
+                    It will be called on the same thread that the app was created on,
+                    so you should not block in this function.
+
+            !!! warning
+                If `callback` is specified, it must not raise an exception,
+                otherwise it is undefined behavior, and in most cases, the program will panic.
             """
 
         def run_iteration(
@@ -60,18 +71,28 @@ if TYPE_CHECKING:
         ) -> None:
             """Run this app iteratively without consuming it, calling `callback` on each iteration.
 
-            NOTE: `callback` has the same restrictions as `App.run`.
+            Args:
+                callback: a callback function that will be called on each iteration.
 
-            Tip: Approximately 2ms per call in debug mode.
+            !!! warning
+                `callback` has the same restrictions as [App.run][pytauri.App.run].
+
+            !!! tip
+                Approximately 2ms per calling in debug mode.
             """
 
-        def cleanup_before_exit(self, /) -> None: ...
+        def cleanup_before_exit(self, /) -> None:
+            """Runs necessary cleanup tasks before exiting the process.
+
+            **You should always exit the tauri app immediately after this function returns and not use any tauri-related APIs.**
+            """
 
     @final
-    class AppHandle: ...
+    class AppHandle:
+        """[tauri::AppHandle](https://docs.rs/tauri/latest/tauri/app/struct.AppHandle.html)"""
 
     @final
-    class BuilderArgs:
+    class BuilderArgs:  # noqa: D101
         def __new__(
             cls,
             /,
@@ -79,59 +100,102 @@ if TYPE_CHECKING:
             context: "Context",
             invoke_handler: Optional[_InvokeHandlerProto] = None,
         ) -> Self:
-            """NOTE: The implementer of `invoke_handler` must never raise an exception,
-            otherwise it is considered undefined behavior. Additionally, it must not block.
+            """[tauri::Builder](https://docs.rs/tauri/latest/tauri/struct.Builder.html)
+
+            !!! warning
+                The implementer of `invoke_handler` must never raise an exception,
+                otherwise it is considered undefined behavior.
+                Additionally, `invoke_handler` must not block.
+
+            Args:
+                context: use [context_factory][pytauri.context_factory] to get it.
+                invoke_handler: use [Commands][pytauri.ipc.Commands] to get it.
             """
             ...
 
     @final
     class Builder:
-        """NOTE: This class is not thread-safe, and should not be shared between threads.
+        """[Tauri::Builder](https://docs.rs/tauri/latest/tauri/struct.Builder.html)
 
-        - And you need to ensure it is garbage collected on the thread it was created on,
-            otherwise it will cause memory leaks.
+        use [builder_factory][pytauri.builder_factory] to instantiate this class.
+
+        !!! warning
+            This class is not thread-safe, and should not be shared between threads.
+
+            - You can only use it on the thread it was created on.
+            - And you need to ensure it is garbage collected on the thread it was created on,
+                otherwise it will cause memory leaks.
         """
 
-        def build(self, args: BuilderArgs, /) -> App: ...
+        def build(self, args: BuilderArgs, /) -> App:
+            """Consume this builder and build an app with the given `BuilderArgs`."""
+            ...
 
     @final
-    class Context: ...
+    class Context:
+        """[tauri::Context](https://docs.rs/tauri/latest/tauri/struct.Context.html)"""
 
     @final
-    class RunEvent(PyMatchRefMixin["RunEventEnumType"]): ...
+    class RunEvent(PyMatchRefMixin["RunEventEnumType"]):
+        """[tauri::RunEvent](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html)"""
 
     @final
     class RunEventEnum:
+        """[tauri::RunEvent](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html)"""
+
         @final
-        class Exit: ...
+        class Exit:
+            """[tauri::RunEvent::Exit](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html#variant.Exit)"""
 
         @final
         class ExitRequested:
+            """[tauri::RunEvent::ExitRequested](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html#variant.ExitRequested)"""
+
             code: Optional[int]
 
         @final
         class WindowEvent:
+            """[tauri::RunEvent::WindowEvent](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html#variant.WindowEvent)"""
+
             label: str
 
         @final
         class WebviewEvent:
+            """[tauri::RunEvent::WebviewEvent](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html#variant.WebviewEvent)"""
+
             label: str
 
         @final
-        class Ready: ...
+        class Ready:
+            """[tauri::RunEvent::Ready](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html#variant.Ready)"""
 
         @final
-        class Resumed: ...
+        class Resumed:
+            """[tauri::RunEvent::Resumed](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html#variant.Resumed)"""
 
         @final
-        class MainEventsCleared: ...
+        class MainEventsCleared:
+            """[tauri::RunEvent::MainEventsCleared](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html#variant.MainEventsCleared)"""
 
         @final
-        class MenuEvent: ...
+        class MenuEvent:
+            """[tauri::RunEvent::MenuEvent](https://docs.rs/tauri/latest/tauri/enum.RunEvent.html#variant.MenuEvent)"""
 
-    def builder_factory(*args: Any, **kwargs: Any) -> Builder: ...
+    def builder_factory(*args: Any, **kwargs: Any) -> Builder:
+        """A factory function for creating a `Builder` instance.
 
-    def context_factory(*args: Any, **kwargs: Any) -> Context: ...
+        This is the closure passed from the Rust side when initializing the pytauri pyo3 module.
+        `args` and `kwargs` will be passed to this closure.
+        """
+        ...
+
+    def context_factory(*args: Any, **kwargs: Any) -> Context:
+        """A factory function for creating a `Context` instance.
+
+        This is the closure passed from the Rust side when initializing the pytauri pyo3 module.
+        `args` and `kwargs` will be passed to this closure.
+        """
+        ...
 
 
 else:
@@ -146,7 +210,7 @@ else:
     context_factory = pytauri_mod.context_factory
 
 
-RunEventEnumType = Union[
+RunEventEnumType: TypeAlias = Union[
     RunEventEnum.Exit,
     RunEventEnum.ExitRequested,
     RunEventEnum.WindowEvent,
@@ -156,3 +220,4 @@ RunEventEnumType = Union[
     RunEventEnum.MainEventsCleared,
     RunEventEnum.MenuEvent,
 ]
+"""See [RunEventEnum][pytauri.RunEventEnum] for details."""

@@ -1,3 +1,5 @@
+"""[tauri::ipc](https://docs.rs/tauri/latest/tauri/ipc/index.html)"""
+
 from collections import UserDict
 from collections.abc import Awaitable
 from functools import partial, wraps
@@ -53,17 +55,29 @@ class _PyInvokHandleData(NamedTuple):
 
 
 class InvokeException(Exception):  # noqa: N818
-    """When this exception is raised in a `Command`,
+    """Indicates that an exception occurred in a `command`. Similar to Rust's `Result::Err`.
+
+    When this exception is raised in a `command`,
     pytauri will return it to the frontend through `Invoke.reject(value)`
     and will not log the exception on the python side.
     """
 
-    def __init__(self, value: str) -> None:
+    value: str
+    """The error message that will be returned to the frontend."""
+
+    def __init__(self, value: str) -> None:  # noqa: D107
         self.value = value
 
 
 class Commands(UserDict[str, _PyInvokHandleData]):
-    def __init__(self) -> None:
+    """This class provides features similar to [tauri::command](https://docs.rs/tauri/latest/tauri/attr.command.html).
+
+    Typically, you would use [Commands.register][pytauri.Commands.register] to register a command handler function.
+    Then, use [Commands.build_invoke_handler][pytauri.Commands.build_invoke_handler] to get an `invoke_handler`
+    for use with [BuilderArgs][pytauri.BuilderArgs].
+    """
+
+    def __init__(self) -> None:  # noqa: D107
         super().__init__()
 
         data = self.data
@@ -118,9 +132,24 @@ class Commands(UserDict[str, _PyInvokHandleData]):
 
         self._async_invoke_handler = _async_invoke_handler
 
-    def build_invoke_handler(self, portal: BlockingPortal) -> _InvokeHandlerProto:
-        """NOTE: The `BlockingPortal` must remain valid while the returned
-        `invoke_handler` is being used.
+    def build_invoke_handler(self, portal: BlockingPortal, /) -> _InvokeHandlerProto:
+        """This method is similar to [tauri::generate_handler](https://docs.rs/tauri/latest/tauri/macro.generate_handler.html).
+
+        You can use this method to get `invoke_handler` for use with [BuilderArgs][pytauri.BuilderArgs].
+
+        Examples:
+            ```py
+            from anyio.from_thread import start_blocking_portal
+
+            commands = Commands()
+
+            with start_blocking_portal(backend) as portal:
+                invoke_handler = commands.build_invoke_handler(portal)
+                ...
+            ```
+
+        !!! warning
+            The `portal` must remain valid while the returned `invoke_handler` is being used.
         """
         async_invoke_handler = self._async_invoke_handler
 
@@ -138,15 +167,17 @@ class Commands(UserDict[str, _PyInvokHandleData]):
     def wrap_pyfunc(  # noqa: C901  # TODO: simplify the method
         pyfunc: _WrappablePyHandlerType,
     ) -> _PyHandlerType:
-        """Wrap a Callable to conform to the definition of PyHandlerType.
+        """Wrap a `Callable` to conform to the definition of PyHandlerType.
 
         Specifically:
-        - If `pyfunc` has a `KEYWORD_ONLY` parameter named `body`, check if `issubclass(body, BaseModel)` is true,
-          and if so, wrap it as a new function with `body: bytearray`.
-        - If `pyfunc` conforms to `issubclass(return_annotation, BaseModel)`, wrap it as a new function with `return: bytes`.
+
+        - If `pyfunc` has a `KEYWORD_ONLY` parameter named `body`, will check if `issubclass(body, BaseModel)` is true,
+          and if so, wrap it as a new function with `body: bytearray` parameter.
+        - If `pyfunc` conforms to `issubclass(return_annotation, BaseModel)`,
+          wrap it as a new function with `return_annotation: bytes` return type.
         - If not, will return the original `pyfunc`.
 
-        The wrapper will be updated using [functools.wraps], and its `__signature__` will also be updated.
+        The `pyfunc` will be decorated using [functools.wraps][], and its `__signature__` will also be updated.
         """
         serializer = None
         deserializer = None
@@ -230,8 +261,21 @@ class Commands(UserDict[str, _PyInvokHandleData]):
     def parse_parameters(
         pyfunc: _PyHandlerType, /, check_signature: bool = True
     ) -> ParametersType:
-        """Check if the `signature` conforms to [ArgumentsType],
-        and if the return value conforms to [bytes] or [bytearray]
+        """Check the signature of a `Callable` and return the parameters.
+
+        Check if the [Signature][inspect.Signature] of `pyfunc` conforms to [ArgumentsType][pytauri.ipc.ArgumentsType],
+        and if the return value is a subclass of [bytes][] or [bytearray][].
+
+        Args:
+            pyfunc: The `Callable` to check.
+            check_signature: Whether to check the signature of `pyfunc`.
+                Set it to `False` only if you are sure that the signature conforms to the expected pattern.
+
+        Returns:
+            The parameters of the `pyfunc`. You can use it with [Invoke.bind_to][pytauri.ipc.Invoke.bind_to].
+
+        Raises:
+            ValueError: If the signature does not conform to the expected pattern.
         """
         sig = signature(pyfunc)
         parameters = sig.parameters
@@ -273,6 +317,11 @@ class Commands(UserDict[str, _PyInvokHandleData]):
         /,
         check_signature: bool = True,
     ) -> None:
+        """Set a command handler.
+
+        This method internally calls [parse_parameters][pytauri.Commands.parse_parameters]
+        and [wrap_pyfunc][pytauri.Commands.wrap_pyfunc], `parse_parameters(wrap_pyfunc(handler))`.
+        """
         new_handler = self.wrap_pyfunc(handler)
         parameters = self.parse_parameters(new_handler, check_signature=check_signature)
         self.data[command] = _PyInvokHandleData(parameters, new_handler)
@@ -296,6 +345,31 @@ class Commands(UserDict[str, _PyInvokHandleData]):
     def register(
         self, command: Optional[str] = None, /
     ) -> _RegisterType[_WrappablePyHandlerTypeVar]:
+        """A [decorator](https://docs.python.org/3/glossary.html#term-decorator) to register a command handler.
+
+        Examples:
+            ```py
+            commands = Commands()
+
+
+            @commands.register
+            async def my_command(body: FooModel, app_handle: AppHandle) -> BarModel: ...
+
+
+            @commands.register("foo_command")
+            async def my_command2(body: FooModel, app_handle: AppHandle) -> BarModel: ...
+            ```
+
+        This method internally calls [set_command][pytauri.Commands.set_command],
+        which means the function signature must conform to [ArgumentsType][pytauri.ipc.ArgumentsType].
+
+        Args:
+            command: The name of the command. If not provided, the `__name__` of `callable` will be used.
+
+        Raises:
+            ValueError: If a command with the same name already exists.
+                If it's expected, use [set_command][pytauri.Commands.set_command] instead.
+        """
         if command is None:
             return self._register
         else:

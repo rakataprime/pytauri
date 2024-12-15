@@ -1,3 +1,5 @@
+"""The pytauri-demo application."""
+
 import sys
 from logging import Logger, getLogger
 
@@ -49,6 +51,7 @@ async def _async_task() -> None:
 
 
 def main() -> None:
+    """Run the pytauri-demo application."""
     backend = "asyncio"  # or `trio`
     with start_blocking_portal(backend) as portal:
         app = builder_factory().build(

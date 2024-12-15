@@ -78,15 +78,15 @@ docstring-code-format = true
 # https://docs.astral.sh/ruff/rules/
 [tool.ruff.lint]
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "C4", # flake8-comprehensions
-    "B",  # flake8-bugbear
-    "N",  # pep8-naming
-    "UP", # pyupgrade
-    # "D",      # pydocstyle  # TODO, FIXME, XXX: we enable these lints later
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "C4",     # flake8-comprehensions
+    "B",      # flake8-bugbear
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "D",      # pydocstyle
     "SIM",    # flake8-simplify
     "RUF",    # unused-noqa
     "Q",      # flake8-quotes
@@ -126,7 +126,8 @@ ignore = [
     "RUF002",  # ambiguous-unicode-character-docstring
     "RUF003",  # ambiguous-unicode-character-comment
     "SIM105",  # suppressible-exception # slower
-    "ISC001",
+    "ISC001",  # single-line-implicit-string-concatenation
+    "D415",    # ends-in-punctuation
     # "D418",    # Function decorated with `@overload` shouldn't contain a docstring
     # "SIM108",  # if-else-block-instead-of-if-exp
 ]

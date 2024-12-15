@@ -1,3 +1,5 @@
+"""Run the pytauri-demo application."""
+
 import logging
 
 from codelldb import debug

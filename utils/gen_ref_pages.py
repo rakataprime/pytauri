@@ -39,6 +39,11 @@ for project in (ROOT / "python").iterdir():
     if not (project / "pyproject.toml").exists():
         continue
 
+    # TODO, FIXME, XXX: Separate this package.
+    # Currently it is deprecated, in the future we may contribute it to the community.
+    if project.parts[-1] == "pyfuture":
+        continue
+
     project_src = project / "src"
     for path in sorted(project_src.rglob("*.py")):
         # e.g., `pytauri/__init__.py`

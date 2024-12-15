@@ -1,4 +1,5 @@
 from types import ModuleType
+from typing import TYPE_CHECKING
 
 # See: <https://pypi.org/project/backports.entry-points-selectable/>
 # and: <https://docs.python.org/3/library/importlib.metadata.html#entry-points>
@@ -47,6 +48,20 @@ def _load_pytauri_mod(ext_mod: ModuleType) -> ModuleType:
     return pytauri_mod
 
 
-EXT_MOD = _load_ext_mod()
+if TYPE_CHECKING:
+    EXT_MOD: ModuleType
+    """The extension module of `pytauri` app.
 
-pytauri_mod = _load_pytauri_mod(EXT_MOD)
+    It will be loaded from `entry_points(group="pytauri", name="ext_mod")`.
+
+    Usually you don't need to use it, unless you want to write plugins for `pytauri`.
+    """
+    pytauri_mod: ModuleType
+    """The python module of `pytauri`.
+
+    Equivalent to `EXT_MOD.pytauri`.
+    """
+
+else:
+    EXT_MOD = _load_ext_mod()
+    pytauri_mod = _load_pytauri_mod(EXT_MOD)
