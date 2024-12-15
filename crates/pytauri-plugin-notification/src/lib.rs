@@ -6,8 +6,8 @@ use std::fmt::{Debug, Display};
 use pyo3::prelude::*;
 use pyo3::PyRef;
 use pyo3_utils::py_wrapper::{MappableDeref, PyWrapper, PyWrapperSemverExt as _, PyWrapperT2};
+use pytauri_core::ext_mod::{App, AppHandle};
 use pytauri_core::tauri_runtime::Runtime;
-use pytauri_core::{App, AppHandle};
 use tauri_plugin_notification as plugin;
 
 #[pymodule(submodule, gil_used = false)]

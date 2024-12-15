@@ -5,8 +5,8 @@ use pyo3::types::{PyByteArray, PyDict, PyMapping, PyString};
 use pyo3_utils::py_wrapper::{PyWrapper, PyWrapperT2};
 use tauri::ipc::{InvokeBody, InvokeMessage, InvokeResponseBody};
 
+use crate::ext_mod_impl::PyAppHandleExt as _;
 use crate::tauri_runtime::Runtime;
-use crate::PyAppHandleExt as _;
 
 type IpcInvoke = tauri::ipc::Invoke<Runtime>;
 type IpcInvokeResolver = tauri::ipc::InvokeResolver<Runtime>;

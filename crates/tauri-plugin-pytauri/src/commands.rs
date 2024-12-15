@@ -1,6 +1,6 @@
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
-use pytauri_core::ipc::Invoke;
+use pytauri_core::ext_mod::ipc::Invoke;
 use pytauri_core::tauri_runtime::Runtime as PyTauriRuntime;
 use tauri::ipc;
 
