@@ -9,7 +9,11 @@ use std::ops::Deref;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::{IntoPyObject, PyErr};
-use pyo3_utils::{PyMatchRef, PyWrapper, PyWrapperT0, PyWrapperT2, UnsafeUngilExt};
+use pyo3_utils::{
+    py_match::PyMatchRef,
+    py_wrapper::{PyWrapper, PyWrapperT0, PyWrapperT2},
+    ungil::UnsafeUngilExt,
+};
 use tauri::Manager;
 
 use crate::tauri_runtime::Runtime;
@@ -86,7 +90,8 @@ impl RunEvent {
 }
 
 impl RunEvent {
-    const fn new(run_event: tauri::RunEvent) -> Self {
+    #[inline]
+    fn new(run_event: tauri::RunEvent) -> Self {
         Self(PyWrapper::new0(run_event))
     }
 }

@@ -6,7 +6,7 @@ pub mod standalone;
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyModule, PyTuple};
 use pyo3::wrap_pymodule;
-use pyo3_utils::{PyWrapper, PyWrapperT2};
+use pyo3_utils::py_wrapper::{PyWrapper, PyWrapperT2};
 pub use pytauri_core::ext_mod;
 use pytauri_core::tauri_runtime::Runtime;
 use pytauri_core::utils::TauriError;

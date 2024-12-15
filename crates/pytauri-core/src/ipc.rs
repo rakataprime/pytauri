@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use pyo3::prelude::*;
 use pyo3::types::{PyByteArray, PyDict, PyMapping, PyString};
-use pyo3_utils::{PyWrapper, PyWrapperT2};
+use pyo3_utils::py_wrapper::{PyWrapper, PyWrapperT2};
 use tauri::ipc::{InvokeBody, InvokeMessage, InvokeResponseBody};
 
 use crate::tauri_runtime::Runtime;
@@ -21,7 +21,8 @@ pub struct InvokeResolver {
 }
 
 impl InvokeResolver {
-    const fn new(resolver: IpcInvokeResolver, arguments: Py<PyDict>) -> Self {
+    #[inline]
+    fn new(resolver: IpcInvokeResolver, arguments: Py<PyDict>) -> Self {
         Self {
             inner: PyWrapper::new2(resolver),
             arguments,
