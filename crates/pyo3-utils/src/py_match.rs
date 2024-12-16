@@ -1,19 +1,60 @@
-/// TODO: In the future, we will provide a macro for this trait to automatically generate pymethod
+//! When you want to expose an enum to Python, you should implement the trait in this module.
+//!
+//! # Example:
+/*!
+```rust
+use pyo3::prelude::*;
+use pyo3_utils::py_match::PyMatchRef;
+
+mod third_party {
+    pub enum Foo {
+        A { a: i32 },
+    }
+}
+
+#[pyclass(frozen)]
+#[non_exhaustive]
+enum FooEnum {
+    A { a: i32 },
+}
+
+#[pyclass(frozen)]
+#[non_exhaustive]
+struct Foo(third_party::Foo);
+
+impl PyMatchRef for Foo {
+    type Output = FooEnum;
+
+    fn match_ref(&self) -> Self::Output {
+        match &self.0 {
+            third_party::Foo::A { a } => FooEnum::A { a: *a },
+        }
+    }
+}
+
+// In the future, we might provide a macro to automatically generate this pymethod,
+// for now, please do it manually.
+#[pymethods]
+impl Foo {
+    fn match_ref(&self) -> <Self as PyMatchRef>::Output {
+        <Self as PyMatchRef>::match_ref(self)
+    }
+}
+```
+*/
+
 pub trait PyMatchRef {
     type Output;
 
     fn match_ref(&self) -> Self::Output;
 }
 
-/// TODO: In the future, we will provide a macro for this trait to automatically generate pymethod
 pub trait PyMatchMut {
     type Output;
 
     fn match_mut(&mut self) -> Self::Output;
 }
 
-/// TODO: In the future, we will provide a macro for this trait to automatically generate pymethod
-///
 /// It is recommended to implement this trait only when using `clone` in [PyMatchRef]/[PyMatchMut]
 /// would significantly impact memory/performance.
 pub trait PyMatchInto {

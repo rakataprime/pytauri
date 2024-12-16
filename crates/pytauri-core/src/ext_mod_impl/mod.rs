@@ -16,6 +16,7 @@ use tauri::Manager;
 
 use crate::tauri_runtime::Runtime;
 
+/// see also: [tauri::RunEvent]
 #[pyclass(frozen)]
 #[non_exhaustive]
 pub enum RunEventEnum {
@@ -94,7 +95,7 @@ impl RunEvent {
     }
 }
 
-/// Get the global app singleton [Py]<[AppHandle]> through [PyAppHandleExt]
+/// You can get the global singleton [Py]<[AppHandle]> using [PyAppHandleExt].
 #[pyclass(frozen)]
 #[non_exhaustive]
 // NOTE: Do not use [PyWrapperT2], otherwise the global singleton [PyAppHandle]
@@ -124,6 +125,8 @@ impl Deref for PyAppHandle {
     }
 }
 
+/// This error indicates that the app was not initialized using [App::try_build],
+/// i.e. it was not created by pytauri.
 #[derive(Debug)]
 pub struct PyAppHandleStateError;
 
@@ -146,11 +149,11 @@ impl From<PyAppHandleStateError> for PyErr {
 
 pub type PyAppHandleStateResult<T> = Result<T, PyAppHandleStateError>;
 
+/// You can use this trait to get the global singleton [Py]<[AppHandle]>.
 pub trait PyAppHandleExt<R: tauri::Runtime>: Manager<R> {
     /// # Panics
     ///
-    /// Panics if it fails to get [PyAppHandle] from the state,
-    /// indicating that this app has not initialized by pytauri.
+    /// Panics if [PyAppHandleExt::try_py_app_handle] returns an error.
     fn py_app_handle(&self) -> impl Deref<Target = Py<AppHandle>> {
         self.try_py_app_handle().unwrap()
     }
@@ -169,6 +172,7 @@ impl<R: tauri::Runtime, T: Manager<R>> PyAppHandleExt<R> for T {}
 pub struct App(pub PyWrapper<PyWrapperT2<tauri::App<Runtime>>>);
 
 impl App {
+    #[cfg(feature = "__private")]
     pub fn try_build(py: Python<'_>, app: tauri::App<Runtime>) -> PyResult<Self> {
         let app_handle = AppHandle::new(app.handle().to_owned());
         let py_app_handle = PyAppHandle::new(app_handle.into_pyobject(py)?.unbind());

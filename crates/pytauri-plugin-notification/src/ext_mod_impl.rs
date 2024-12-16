@@ -151,7 +151,7 @@ impl NotificationExt {
     // <https://github.com/tauri-apps/plugins-workspace/issues/2161>
 
     #[staticmethod]
-    pub fn builder(slf: ImplNotificationExt, py: Python<'_>) -> PyResult<NotificationBuilder> {
+    fn builder(slf: ImplNotificationExt, py: Python<'_>) -> PyResult<NotificationBuilder> {
         let builder = slf.borrow(py).defer_dyn()?.notification().builder();
         Ok(NotificationBuilder::new(builder))
     }

@@ -11,6 +11,7 @@ use crate::tauri_runtime::Runtime;
 type IpcInvoke = tauri::ipc::Invoke<Runtime>;
 type IpcInvokeResolver = tauri::ipc::InvokeResolver<Runtime>;
 
+/// Please refer to the Python-side documentation
 // `subclass` for Generic type hint
 #[pyclass(frozen, subclass)]
 #[non_exhaustive]
@@ -54,6 +55,7 @@ impl InvokeResolver {
     }
 }
 
+/// Please refer to the Python-side documentation
 #[pyclass(frozen)]
 #[non_exhaustive]
 pub struct Invoke {
@@ -63,6 +65,8 @@ pub struct Invoke {
 }
 
 impl Invoke {
+    /// If the frontend makes an illegal IPC call, it will automatically reject and return [None]
+    #[cfg(feature = "__private")]
     pub fn new(py: Python<'_>, invoke: IpcInvoke) -> Option<Self> {
         let func_name = match Self::get_func_name_from_message(&invoke.message) {
             Ok(name) => name,

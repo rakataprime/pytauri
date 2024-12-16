@@ -19,7 +19,11 @@ fn pyfunc(invoke: IpcInvoke) {
             .unwrap()
             .bind(py)
             .clone();
-        let invoke = Invoke::new(py, invoke).unwrap();
+
+        let invoke = match Invoke::new(py, invoke) {
+            Some(invoke) => invoke,
+            None => return, // the ipc has already been handled and rejected
+        };
 
         // NOTE: We require that the implementation of `py_invoke_handler`
         // does not block for a long time, so this call will not block

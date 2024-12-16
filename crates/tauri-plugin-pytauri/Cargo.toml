@@ -16,7 +16,7 @@ include = [
 tauri = { workspace = true }
 
 pyo3 = { workspace = true }
-pytauri-core = { workspace = true }
+pytauri-core = { workspace = true, features = ["__private"] }
 
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 

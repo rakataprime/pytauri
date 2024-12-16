@@ -1,9 +1,19 @@
+// See: <https://doc.rust-lang.org/rustdoc/unstable-features.html#extensions-to-the-doc-attribute>
+#![cfg_attr(
+    docsrs,
+    feature(doc_cfg, doc_auto_cfg, doc_cfg_hide),
+    doc(cfg_hide(doc))
+)]
+
 mod ext_mod_impl;
 pub mod tauri_runtime;
 pub mod utils;
 
 use pyo3::prelude::*;
 
+/// You can access this module in Python via `pytuari.EXT_MOD.pytuari`.
+///
+/// See also: [tauri]
 #[pymodule(submodule, gil_used = false, name = "pytauri")]
 pub mod ext_mod {
     use super::*;
@@ -13,6 +23,7 @@ pub mod ext_mod {
 
     pub use ext_mod_impl::{PyAppHandleExt, PyAppHandleStateError, PyAppHandleStateResult};
 
+    /// see also: [tauri::ipc]
     #[pymodule]
     pub mod ipc {
         use super::*;

@@ -1,3 +1,11 @@
+//! When you want to implement a pyclass that can obtain ownership of the internal value in a semantically compatible way,
+//! you can use this module.
+//!
+//! Pay attention to this module's:
+//!
+//! - [PyWrapper]
+//! - [PyWrapperSemverExt]
+
 use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
@@ -13,6 +21,7 @@ use pyo3::PyErr;
 const CONSUMED_ERROR_MSG: &str = "Already consumed";
 const LOCK_ERROR_MSG: &str = "Already mutably borrowed";
 
+/// This error indicates that the internal value has been consumed, i.e., its ownership has been moved out.
 #[derive(Debug)]
 pub struct ConsumedError;
 
@@ -32,6 +41,8 @@ impl From<ConsumedError> for PyErr {
 
 pub type ConsumedResult<T> = Result<T, ConsumedError>;
 
+/// This error indicates that the internal value has already been mutably borrowed.
+/// At this point, you must wait for other code to release the lock.
 #[derive(Debug)]
 pub struct LockError;
 
@@ -51,7 +62,9 @@ impl From<LockError> for PyErr {
 
 pub type LockResult<T> = Result<T, LockError>;
 
+/// Can only obtain alias references
 pub type PyWrapperT0<T> = Result<T, Infallible>;
+/// Can obtain alias references and mutable references
 // TODO, FIXME, PERF: we have to use `RwLock` instead of `RefCell`,
 // it's because pyo3 require `Sync`.
 //
@@ -63,6 +76,7 @@ pub type PyWrapperT0<T> = Result<T, Infallible>;
 //
 // use `parking_lot` instead of `std`, it's because `parking_lot` will not poisoned.
 pub type PyWrapperT1<T> = RwLock<Result<T, Infallible>>;
+/// Can obtain alias references, mutable references, and ownership
 pub type PyWrapperT2<T> = RwLock<Result<T, ConsumedError>>;
 
 mod sealed {
@@ -111,7 +125,9 @@ impl<T> RwLockExt for RwLock<T> {
     }
 }
 
+/// This trait provides compatibility between `&T` and [parking_lot::RwLockReadGuard]
 pub trait MappableDeref<'a>: Deref + sealed::SealedMappableDeref {
+    /// This method is similar to [parking_lot::RwLockReadGuard::map] and its sibling methods.
     fn map<U, F>(self, f: F) -> impl MappableDeref<'a, Target = U>
     where
         U: ?Sized + 'a,
@@ -157,7 +173,9 @@ where
     }
 }
 
+/// This trait provides compatibility between [&mut T] and [parking_lot::RwLockWriteGuard]
 pub trait MappableDerefMut<'a>: DerefMut + sealed::SealedMappableDerefMut {
+    /// This method is similar to [parking_lot::RwLockWriteGuard::map] and its sibling methods.
     fn map<U, F>(self, f: F) -> impl MappableDerefMut<'a, Target = U>
     where
         U: ?Sized + 'a,
@@ -203,7 +221,38 @@ where
     }
 }
 
-/// NOTE: For [PyWrapper<T>], changes from `T = [PyWrapperT0] -> [PyWrapperT1] -> [PyWrapperT2]`
+/// You can wrap the desired internal value in this structure to implement a pyclass that
+/// can obtain ownership of the internal value.
+///
+/// # Example
+/**
+```rust
+use pyo3::prelude::*;
+use pyo3_utils::py_wrapper::{PyWrapper, PyWrapperT2};
+
+struct Foo;
+
+impl Foo {
+    fn foo(self) {}
+}
+
+#[pyclass(frozen)]
+#[non_exhaustive]
+pub struct Bar(PyWrapper<PyWrapperT2<Foo>>);
+
+#[pymethods]
+impl Bar {
+    // Normally you can directly use `&self` to get a reference
+    // instead of using `Py<Self>::get` in a pymethod.
+    // Here just for demonstration purposes.
+    fn py_foo(slf: Py<Self>) -> PyResult<()> {
+        slf.get().0.try_take_inner()??.foo();
+        Ok(())
+    }
+}
+```
+*/
+/// NOTE: For [`PyWrapper<T>`], changes from `T = [PyWrapperT0] -> [PyWrapperT1] -> [PyWrapperT2]`
 /// will not be considered breaking changes.
 ///
 /// - When the type is [PyWrapperT0], all methods are zero-cost abstractions.
@@ -272,11 +321,17 @@ impl<T> PyWrapper<PyWrapperT1<T>> {
         self.inner.into_inner().unwrap()
     }
 
+    /// # Panics
+    ///
+    /// Panics if the internal value has already been mutably borrowed.
     #[deprecated(note = "use `lock_inner_ref` instead")]
     pub fn inner_ref(&self) -> impl MappableDeref<'_, Target = T> {
         self.lock_inner_ref().expect(LOCK_ERROR_MSG)
     }
 
+    /// # Panics
+    ///
+    /// Panics if the internal value has already been mutably borrowed.
     #[deprecated(note = "use `lock_inner_mut` instead")]
     pub fn inner_mut(&self) -> impl MappableDerefMut<'_, Target = T> {
         self.lock_inner_mut().expect(LOCK_ERROR_MSG)
@@ -319,6 +374,7 @@ impl<T> PyWrapper<PyWrapperT2<T>> {
         self.try_replace_inner(Err(ConsumedError))
     }
 
+    /// similar to [std::mem::replace]
     pub fn try_replace_inner(&self, inner: ConsumedResult<T>) -> LockResult<ConsumedResult<T>> {
         self.try_write().map(|mut guard| {
             let result = guard.deref_mut();
@@ -326,10 +382,12 @@ impl<T> PyWrapper<PyWrapperT2<T>> {
         })
     }
 
+    /// similar to [parking_lot::RwLock::try_read]
     pub fn try_read(&self) -> LockResult<RwLockReadGuard<'_, ConsumedResult<T>>> {
         self.inner.try_read_ext()
     }
 
+    /// similar to [parking_lot::RwLock::try_write]
     pub fn try_write(&self) -> LockResult<RwLockWriteGuard<'_, ConsumedResult<T>>> {
         self.inner.try_write_ext()
     }
@@ -338,18 +396,27 @@ impl<T> PyWrapper<PyWrapperT2<T>> {
         self.inner.into_inner()
     }
 
+    /// # Panics
+    ///
+    /// Panics if the internal value has already been consumed, i.e., its ownership has been moved out.
     #[deprecated(note = "use `try_lock_inner_ref` instead")]
     pub fn lock_inner_ref(&self) -> LockResult<MappedRwLockReadGuard<'_, T>> {
         self.try_lock_inner_ref()
             .map(|result| result.expect(CONSUMED_ERROR_MSG))
     }
 
+    /// # Panics
+    ///
+    /// Panics if the internal value has already been consumed, i.e., its ownership has been moved out.
     #[deprecated(note = "use `try_lock_inner_mut` instead")]
     pub fn lock_inner_mut(&self) -> LockResult<MappedRwLockWriteGuard<'_, T>> {
         self.try_lock_inner_mut()
             .map(|result| result.expect(CONSUMED_ERROR_MSG))
     }
 
+    /// # Panics
+    ///
+    /// Panics if the internal value has already been mutably borrowed or consumed.
     #[deprecated(note = "use `try_lock_inner_ref` instead")]
     pub fn inner_ref(&self) -> impl MappableDeref<'_, Target = T> {
         self.try_lock_inner_ref()
@@ -357,6 +424,9 @@ impl<T> PyWrapper<PyWrapperT2<T>> {
             .expect(CONSUMED_ERROR_MSG)
     }
 
+    /// # Panics
+    ///
+    /// Panics if the internal value has already been mutably borrowed or consumed.
     #[deprecated(note = "use `try_lock_inner_mut` instead")]
     pub fn inner_mut(&self) -> impl MappableDerefMut<'_, Target = T> {
         self.try_lock_inner_mut()
@@ -364,13 +434,25 @@ impl<T> PyWrapper<PyWrapperT2<T>> {
             .expect(CONSUMED_ERROR_MSG)
     }
 
+    /// # Panics
+    ///
+    /// Panics if the internal value has already been consumed, i.e., its ownership has been moved out.
     #[deprecated(note = "use `try_into_inner` instead")]
     pub fn into_inner(self) -> T {
         self.try_into_inner().expect(CONSUMED_ERROR_MSG)
     }
 }
 
-/// You must drop the `T` of [LockResult]::<[ConsumedResult]>::`<T>` to release the potentially acquired lock
+/// This trait allows you to handle [PyWrapperT0] and [PyWrapperT1] with the API of [PyWrapper]<[PyWrapperT2]>,
+/// so you can write future-compatible code.
+///
+/// # NOTE
+/// <div class="warning">
+///
+/// You must drop the returned [MappableDeref] and [MappableDerefMut], because for the implementations
+/// of [PyWrapperT1] and [PyWrapperT2], they will hold internal locks.
+///
+/// </div>
 pub trait PyWrapperSemverExt: sealed::SealedPyWrapper {
     type Wrapped;
 
