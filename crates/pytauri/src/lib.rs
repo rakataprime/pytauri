@@ -1,3 +1,15 @@
+//! Pay attention to this module's:
+//!
+//! - [pymodule_export]
+//! - [standalone]
+
+// See: <https://doc.rust-lang.org/rustdoc/unstable-features.html#extensions-to-the-doc-attribute>
+#![cfg_attr(
+    docsrs,
+    feature(doc_cfg, doc_auto_cfg, doc_cfg_hide),
+    doc(cfg_hide(doc))
+)]
+
 #[cfg(feature = "standalone")]
 mod pyembed;
 #[cfg(feature = "standalone")]
@@ -6,12 +18,15 @@ pub mod standalone;
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyModule, PyTuple};
 use pyo3::wrap_pymodule;
-use pyo3_utils::{PyWrapper, PyWrapperT2};
-pub use pytauri_core::ext_mod;
+use pyo3_utils::py_wrapper::{PyWrapper, PyWrapperT2};
 use pytauri_core::tauri_runtime::Runtime;
 use pytauri_core::utils::TauriError;
 use tauri::Context;
 
+/// Use [pymodule_export] instead of this `ext_mod` directly.
+pub use pytauri_core::ext_mod;
+
+/// Please refer to the Python-side documentation
 #[pyclass(frozen)]
 #[non_exhaustive]
 #[derive(Debug)]
@@ -73,6 +88,37 @@ impl Builder {
     }
 }
 
+/// Exports the [ext_mod] module to the `parent_module`.
+///
+/// `context_factory` and `builder_factory` will be exported as the
+/// `pytauri.context_factory` and `pytauri.builder_factory` functions on the
+/// Python side.
+///
+/// # Example
+/**
+```ignore
+use pyo3::prelude::*;
+
+#[pymodule(gil_used = false)]
+#[pyo3(name = "_ext_mod")]
+pub mod _ext_mod {
+    use super::*;
+
+    #[pymodule_init]
+    fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
+        pytauri::pymodule_export(
+            module,
+            |_args, _kwargs| Ok(tauri::generate_context!()),
+            |_args, _kwargs| {
+                let builder = tauri::Builder::default();
+                // do whatever you want with the builder
+                Ok(builder)
+            },
+        )
+    }
+}
+```
+*/
 pub fn pymodule_export(
     parent_module: &Bound<'_, PyModule>,
     // TODO: make `context_factory` optional and get `Context` from python side

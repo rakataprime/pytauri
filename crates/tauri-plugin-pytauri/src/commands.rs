@@ -1,6 +1,6 @@
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
-use pytauri_core::ipc::Invoke;
+use pytauri_core::ext_mod::ipc::Invoke;
 use pytauri_core::tauri_runtime::Runtime as PyTauriRuntime;
 use tauri::ipc;
 
@@ -19,7 +19,11 @@ fn pyfunc(invoke: IpcInvoke) {
             .unwrap()
             .bind(py)
             .clone();
-        let invoke = Invoke::new(py, invoke).unwrap();
+
+        let invoke = match Invoke::new(py, invoke) {
+            Some(invoke) => invoke,
+            None => return, // the ipc has already been handled and rejected
+        };
 
         // NOTE: We require that the implementation of `py_invoke_handler`
         // does not block for a long time, so this call will not block

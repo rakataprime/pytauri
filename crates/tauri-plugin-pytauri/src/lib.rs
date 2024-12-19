@@ -1,3 +1,6 @@
+//! This crate is currently only used internally by pytauri to
+//! implement IPC communication between the frontend and Python.
+
 mod commands;
 mod gil_runtime;
 
@@ -33,14 +36,21 @@ impl PyInvokeHandler {
     }
 }
 
-/// Each time [tauri::ipc::Invoke] is received, it will be called in the form of `py_invoke_handler(Invoke)`,
-/// and `py_invoke_handler` is responsible for handling `Invoke`.
+/// Initializes the plugin.
+///
+/// The `py_invoke_handler` should have the following signature:
+///
+/// > def py_invoke_handler(invoke: [Invoke][pytauri_core::ext_mod::ipc::Invoke], /) -> None:
+/// >     ...
+///
+/// It will be stored in the tauri app state and used to handle ipc requests from the frontend.
+/// You can get its reference through [PyInvokeHandlerExt].
 ///
 /// # NOTE:
 ///
-/// - `py_invoke_handler` will be called in the tokio runtime, so it must not block for a long time.
-///     - tokio runtime means it is running on an external thread
-/// - `py_invoke_handler` must not raise exception, otherwise it will result in logical undefined behavior.
+/// - `py_invoke_handler` will be called in a tokio runtime, so it must not block for a long time.
+///     - `tokio runtime` means it is running on an external thread.
+/// - `py_invoke_handler` must not raise exceptions, otherwise it will result in logical undefined behavior.
 pub fn init(py_invoke_handler: PyInvokeHandlerType) -> TauriPlugin<PyTauriRuntime> {
     Builder::<PyTauriRuntime>::new(PLUGIN_NAME)
         .invoke_handler(invoke_handler)
@@ -64,6 +74,7 @@ mod sealed {
     impl<R: Runtime, T: Manager<R>> SealedTrait<R> for T {}
 }
 
+/// This error indicates that the extension is not initialized
 #[derive(Debug)]
 pub struct PyInvokeHandlerStateError;
 
@@ -87,6 +98,7 @@ impl From<PyInvokeHandlerStateError> for PyErr {
 
 pub type PyInvokeHandlerStateResult<T> = Result<T, PyInvokeHandlerStateError>;
 
+/// Gets the `py_invoke_handler` passed in when initializing the plugin.
 pub trait PyInvokeHandlerExt<R: Runtime>: Manager<R> + sealed::SealedTrait<R> {
     fn try_py_invoke_handler(
         &self,
@@ -98,7 +110,7 @@ pub trait PyInvokeHandlerExt<R: Runtime>: Manager<R> + sealed::SealedTrait<R> {
 
     /// # Panic
     ///
-    /// If the plugin is not initialized.
+    /// If [PyInvokeHandlerExt::try_py_invoke_handler] returns an error.
     fn py_invoke_handler(&self) -> impl Deref<Target = PyInvokeHandlerType> {
         self.try_py_invoke_handler().unwrap()
     }

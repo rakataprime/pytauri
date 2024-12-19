@@ -1,3 +1,16 @@
+//! Used for embedding Python in a standalone pytauri application.
+//!
+//! In most cases you will use:
+//!
+//! - [prepare_freethreaded_python_with_executable]
+//! - [append_ext_mod]
+//!
+//! # NOTE
+//!
+//! This module is licensed under the `MPL-2.0` license from [pyembed].
+//!
+//! [pyembed]: https://crates.io/crates/pyembed
+
 use std::fs;
 use std::io;
 use std::path::{absolute, Path, PathBuf};
@@ -16,9 +29,10 @@ pub enum PyConfigProfile {
     Isolated,
 }
 
+/// see: <https://docs.python.org/3/c-api/init_config.html#c.PyConfig>
 pub struct PyConfig(pyffi::PyConfig);
 
-/// NOTE: You can only use [PyConfig] before using [pyo3::prepare_freethreaded_python],
+/// NOTE: You can use [PyConfig] only before calling [pyo3::prepare_freethreaded_python],
 /// otherwise it is an invalid operation
 // ref: <https://github.com/indygreg/PyOxidizer/blob/1ceca8664c71f39e849ce4873e00d821504b32bd/pyembed/src/interpreter_config.rs#L252-L619>
 impl PyConfig {
@@ -116,6 +130,12 @@ impl Drop for PyConfig {
     }
 }
 
+/// Get the absolute path of the Python interpreter from the virtual environment path.
+///
+/// For Unix systems, it is equivalent to `venv_path / "bin/python3"`.
+///
+/// For Windows systems, it is equivalent to `venv_path / "Scripts/python.exe"`.
+///
 /// # Panics
 ///
 /// Panics if [std::path::absolute] fails.
@@ -134,6 +154,8 @@ pub fn get_python_executable_from_venv(venv_path: impl Into<PathBuf>) -> PathBuf
     absolute(&venv_path).expect("failed to get absolute path")
 }
 
+/// Prepare a Python interpreter with the specified Python executable.
+///
 /// See:
 ///
 /// - <https://docs.python.org/3/c-api/intro.html#embedding-python>
@@ -142,10 +164,26 @@ pub fn get_python_executable_from_venv(venv_path: impl Into<PathBuf>) -> PathBuf
 /// > The embedding application can steer the search by setting PyConfig.program_name before calling Py_InitializeFromConfig().
 ///
 /// Once you set `program_name` and `executable` to the actual Python executable,
-/// the Python interpreter will automatically set other paths, such as `prefix` and so on,
+/// the Python interpreter will automatically set other paths config, such as `sys.prefix`, `sys.path`,
 /// then the std lib and site-packages will be found correctly.
 ///
 /// NOTE: the `executable` must be absolute path.
+///
+/// This method will internally call [pyo3::prepare_freethreaded_python], so there is no need to call it manually.
+///
+/// # Example
+/**
+```no_run
+use pyo3::prelude::*;
+use pytauri::standalone::prepare_freethreaded_python_with_executable;
+
+prepare_freethreaded_python_with_executable("/my/python")
+    .expect("failed to prepare python interpreter");
+Python::with_gil(|_py| {
+    // Your code here
+});
+```
+*/
 pub fn prepare_freethreaded_python_with_executable(
     executable: impl AsRef<Path>,
 ) -> NewInterpreterResult<()> {
@@ -160,7 +198,30 @@ pub fn prepare_freethreaded_python_with_executable(
     Ok(())
 }
 
-/// Insert the `pytauri` extension module into `sys.modules`, otherwise your Python code cannot import `pytauri`.
+/// Insert the `pytauri` extension module into `sys.modules`,
+/// otherwise your Python code cannot import `pytauri` when built as a standalone application.
+///
+/// # Example
+/**
+```no_run
+use pyo3::prelude::*;
+use pyo3::wrap_pymodule;
+use pytauri::standalone::append_ext_mod;
+
+// Your extension module
+#[pymodule]
+mod ext_mod {}
+
+fn main() -> PyResult<()> {
+    Python::with_gil(|py| {
+        let ext_mod = wrap_pymodule!(ext_mod)(py).into_bound(py);
+        append_ext_mod(ext_mod)?;
+        // Your code here
+        Ok(())
+    })
+}
+```
+*/
 pub fn append_ext_mod(ext_mod: Bound<PyModule>) -> PyResult<()> {
     let py = ext_mod.py();
 

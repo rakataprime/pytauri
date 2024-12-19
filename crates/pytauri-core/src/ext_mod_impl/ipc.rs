@@ -2,15 +2,16 @@ use std::borrow::Cow;
 
 use pyo3::prelude::*;
 use pyo3::types::{PyByteArray, PyDict, PyMapping, PyString};
-use pyo3_utils::{PyWrapper, PyWrapperT2};
+use pyo3_utils::py_wrapper::{PyWrapper, PyWrapperT2};
 use tauri::ipc::{InvokeBody, InvokeMessage, InvokeResponseBody};
 
+use crate::ext_mod_impl::PyAppHandleExt as _;
 use crate::tauri_runtime::Runtime;
-use crate::PyAppHandleExt as _;
 
 type IpcInvoke = tauri::ipc::Invoke<Runtime>;
 type IpcInvokeResolver = tauri::ipc::InvokeResolver<Runtime>;
 
+/// Please refer to the Python-side documentation
 // `subclass` for Generic type hint
 #[pyclass(frozen, subclass)]
 #[non_exhaustive]
@@ -21,7 +22,8 @@ pub struct InvokeResolver {
 }
 
 impl InvokeResolver {
-    const fn new(resolver: IpcInvokeResolver, arguments: Py<PyDict>) -> Self {
+    #[inline]
+    fn new(resolver: IpcInvokeResolver, arguments: Py<PyDict>) -> Self {
         Self {
             inner: PyWrapper::new2(resolver),
             arguments,
@@ -53,6 +55,7 @@ impl InvokeResolver {
     }
 }
 
+/// Please refer to the Python-side documentation
 #[pyclass(frozen)]
 #[non_exhaustive]
 pub struct Invoke {
@@ -62,6 +65,8 @@ pub struct Invoke {
 }
 
 impl Invoke {
+    /// If the frontend makes an illegal IPC call, it will automatically reject and return [None]
+    #[cfg(feature = "__private")]
     pub fn new(py: Python<'_>, invoke: IpcInvoke) -> Option<Self> {
         let func_name = match Self::get_func_name_from_message(&invoke.message) {
             Ok(name) => name,
