@@ -1,0 +1,98 @@
+name: Publish rust crate to Crates.io 🦀
+
+on:
+  push:
+    tags:
+      # e.g., rs/pyo3-utils/v0.1.0
+      - rs/*/v*
+
+# NOTE: It's better not to use cache for release workflow.
+
+jobs:
+  dry-run:
+    name: cargo publish dry-run
+    runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.dry-run.outputs.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # needed for build pyo3 and run scripts
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      # see: <https://github.com/pnpm/action-setup>
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      # see: <https://github.com/actions/setup-node>
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+
+      # see: <https://github.com/dtolnay/rust-toolchain>
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      # needed for build tauri
+      - name: setup-sys-deps
+        uses: ./.github/actions/setup-sys-deps
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: pnpm build frontend
+        run: pnpm -r build
+
+      - name: Dry-run release
+        id: dry-run
+        run: python ./release.py ${{ github.ref }}
+
+      - name: Store the .crate file
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-crate
+          # see: <https://doc.rust-lang.org/cargo/commands/cargo-package.html#description>
+          path: target/package/*.crate
+          if-no-files-found: error
+
+  publish:
+    needs:
+      - dry-run
+    name: Publish to Crates.io
+    runs-on: ubuntu-latest
+    environment:
+      name: crates-io
+      url: https://crates.io/crates/${{ needs.dry-run.outputs.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+      - name: release
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: python ./release.py --no-dry-run ${{ github.ref }}
+
+  github-release:
+    needs:
+      - publish
+    name: Create GitHub release 🏷️
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # IMPORTANT: mandatory for creating release
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-crate
+          path: target/package/
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          draft: true
+          body: ${{ github.event.head_commit.message }}
+          artifacts: target/package/*.crate
