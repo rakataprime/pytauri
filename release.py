@@ -74,6 +74,11 @@ async def release_rs(package: str, no_dry_run: bool) -> int:
     else:
         args.append("--dry-run")
 
+    if package == "tauri-plugin-pytauri":
+        # Some frontend resources bundled with `tauri-plugin-pytauri` are only
+        # built during release and are not tracked by git
+        args.append("--allow-dirty")
+
     proc = await create_subprocess_exec("cargo", *args)
     await proc.wait()
 
