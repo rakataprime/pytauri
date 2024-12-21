@@ -31,7 +31,7 @@ class Greeting(BaseModel):
     message: str
 
 
-@commands.register()
+@commands.command()
 async def greet(body: Person, app_handle: AppHandle) -> Greeting:
     notification_builder = NotificationExt.builder(app_handle)
     notification_builder.show(
@@ -57,7 +57,7 @@ def main() -> None:
         app = builder_factory().build(
             BuilderArgs(
                 context=context_factory(),
-                invoke_handler=commands.build_invoke_handler(portal),
+                invoke_handler=commands.generate_handler(portal),
             )
         )
         if sys.version_info >= (3, 10):

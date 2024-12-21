@@ -70,10 +70,10 @@ class InvokeException(Exception):  # noqa: N818
 
 
 class Commands(UserDict[str, _PyInvokHandleData]):
-    """This class provides features similar to [tauri::command](https://docs.rs/tauri/latest/tauri/attr.command.html).
+    """This class provides features similar to [tauri::generate_handler](https://docs.rs/tauri/latest/tauri/macro.generate_handler.html).
 
-    Typically, you would use [Commands.register][pytauri.Commands.register] to register a command handler function.
-    Then, use [Commands.build_invoke_handler][pytauri.Commands.build_invoke_handler] to get an `invoke_handler`
+    Typically, you would use [Commands.command][pytauri.Commands.command] to register a command handler function.
+    Then, use [Commands.generate_handler][pytauri.Commands.generate_handler] to get an `invoke_handler`
     for use with [BuilderArgs][pytauri.BuilderArgs].
     """
 
@@ -132,7 +132,7 @@ class Commands(UserDict[str, _PyInvokHandleData]):
 
         self._async_invoke_handler = _async_invoke_handler
 
-    def build_invoke_handler(self, portal: BlockingPortal, /) -> _InvokeHandlerProto:
+    def generate_handler(self, portal: BlockingPortal, /) -> _InvokeHandlerProto:
         """This method is similar to [tauri::generate_handler](https://docs.rs/tauri/latest/tauri/macro.generate_handler.html).
 
         You can use this method to get `invoke_handler` for use with [BuilderArgs][pytauri.BuilderArgs].
@@ -144,7 +144,7 @@ class Commands(UserDict[str, _PyInvokHandleData]):
             commands = Commands()
 
             with start_blocking_portal(backend) as portal:
-                invoke_handler = commands.build_invoke_handler(portal)
+                invoke_handler = commands.generate_handler(portal)
                 ...
             ```
 
@@ -342,7 +342,7 @@ class Commands(UserDict[str, _PyInvokHandleData]):
         self.set_command(command, handler, check_signature=True)
         return handler
 
-    def register(
+    def command(
         self, command: Optional[str] = None, /
     ) -> _RegisterType[_WrappablePyHandlerTypeVar]:
         """A [decorator](https://docs.python.org/3/glossary.html#term-decorator) to register a command handler.
@@ -352,11 +352,11 @@ class Commands(UserDict[str, _PyInvokHandleData]):
             commands = Commands()
 
 
-            @commands.register
+            @commands.command()
             async def my_command(body: FooModel, app_handle: AppHandle) -> BarModel: ...
 
 
-            @commands.register("foo_command")
+            @commands.command("foo_command")
             async def my_command2(body: FooModel, app_handle: AppHandle) -> BarModel: ...
             ```
 
