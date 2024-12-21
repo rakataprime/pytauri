@@ -10,6 +10,13 @@ authors = { workspace = true }
 description = "Utilities for PyO3"
 
 
+[package.metadata.docs.rs]
+# See: https://docs.rs/about/metadata
+all-features = true
+rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs"]
+
+
 [dependencies]
 pyo3 = { workspace = true }
 parking_lot = { workspace = true }
