@@ -10,6 +10,16 @@ authors = { workspace = true }
 description = "Core library for PyTauri"
 
 
+[package.metadata.docs.rs]
+# See: https://docs.rs/about/metadata
+all-features = true
+# NOTE: `--cfg docsrs` is necessary,
+# otherwise some tauri dependencies will require linking to system libraries
+# that are not available in the `docs.rs` environment.
+rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs"]
+
+
 [dependencies]
 tauri = { workspace = true, features = ["wry"] }
 pyo3 = { workspace = true }
