@@ -1,0 +1,105 @@
+name: Publish javascript 🟢‌ package to npmjs 📦
+
+on:
+  push:
+    tags:
+      # e.g., js/tauri-plugin-pytauri-api/v0.1.0
+      - js/*/v*
+
+defaults:
+  run:
+    shell: bash
+
+# NOTE: It's better not to use cache for release workflow.
+jobs:
+  dry-run:
+    name: pnpm publish dry-run
+    runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.dry-run.outputs.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      # see: <https://github.com/pnpm/action-setup>
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      # see: <https://github.com/actions/setup-node>
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+      - name: pnpm build frontend
+        run: pnpm -r build
+
+      - name: Dry-run release
+        id: dry-run
+        run: python ./release.py ${{ github.ref }}
+
+  publish:
+    needs:
+      - dry-run
+    name: Publish to npmjs 📦
+    runs-on: ubuntu-latest
+    environment:
+      name: npmjs
+      url: https://npmjs.com/package/${{ needs.dry-run.outputs.package }}
+    permissions:
+      # <https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions>
+      id-token: write # pnpm provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      # see: <https://github.com/pnpm/action-setup>
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      # see: <https://github.com/actions/setup-node>
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          # issue: <https://github.com/pnpm/pnpm/issues/3141#issuecomment-1305563972>
+          registry-url: https://registry.npmjs.org
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+      - name: pnpm build frontend
+        run: pnpm -r build
+
+      - name: release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          # issue: <https://github.com/pnpm/pnpm/issues/6607#issuecomment-2075092418>
+          NPM_CONFIG_PROVENANCE: true
+        run: python ./release.py --no-dry-run ${{ github.ref }}
+
+  github-release:
+    needs:
+      - publish
+    name: Create GitHub release 🏷️
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # IMPORTANT: mandatory for creating release
+    steps:
+
+      # TODO, FIXME: `pnpm pack` dont support workspaces for now,
+      # so we cant store the .tgz file for now.
+      # see: <https://github.com/pnpm/pnpm/issues/4351>
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          draft: true
+          body: ${{ github.event.head_commit.message }}

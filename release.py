@@ -12,10 +12,12 @@ Accepts a string as a parameter, e.g. "rs:pyo3-utils:v0.1.0", with parts separat
 import argparse
 import asyncio
 import sys
+from argparse import ArgumentTypeError
 from asyncio import create_subprocess_exec
 from enum import Enum
 from logging import basicConfig, getLogger
 from os import getenv
+from shutil import which
 from typing import NamedTuple, NoReturn
 
 logger = getLogger(__name__)
@@ -39,6 +41,12 @@ class ReleaseTag(NamedTuple):
         release_tag = release_tag.removeprefix("refs/tags/")
 
         kind, package, version = release_tag.split("/")
+
+        if version[0] != "v":
+            raise ArgumentTypeError(
+                f"version number should start with 'v', got: {version}"
+            )
+
         return ReleaseTag(Kind(kind), package, version[1:])
 
     def write_to_github_output(self) -> None:
@@ -98,7 +106,7 @@ async def release_rs(package: str, no_dry_run: bool) -> int:
 
 
 async def release_py(package: str, no_dry_run: bool) -> int:
-    # https://docs.astral.sh/uv/guides/publish/
+    # <https://docs.astral.sh/uv/guides/publish/>
     args = ["build", "--package", package, "--no-sources", "--color", "always"]
     if no_dry_run:
         raise RuntimeError(
@@ -106,6 +114,37 @@ async def release_py(package: str, no_dry_run: bool) -> int:
         )
 
     proc = await create_subprocess_exec("uv", *args)
+    await proc.wait()
+
+    assert proc.returncode is not None
+    return proc.returncode
+
+
+async def release_js(package: str, no_dry_run: bool) -> int:
+    # <https://pnpm.io/cli/publish>
+
+    args = [
+        "publish",
+        "--filter",
+        package,
+        "--access",
+        "public",
+        "--color",
+        # NOTE: `--no-git-checks` is necessary,
+        # because we run publishing on tag, instead of on a branch (i.e. not `main`)
+        "--no-git-checks",
+    ]
+
+    if not no_dry_run:
+        args.append("--dry-run")
+
+    # on windows, `pnpm` is actually `pnpm.cmd`,
+    # so we need to use `which` to find the actual program
+    program = which("pnpm")
+    if program is None:
+        raise FileNotFoundError("`pnpm` is not found in PATH")
+
+    proc = await create_subprocess_exec(program, *args)
     await proc.wait()
 
     assert proc.returncode is not None
@@ -133,7 +172,7 @@ if __name__ == "__main__":
         elif release_tag.kind == Kind.PY:
             return await release_py(release_tag.package, no_dry_run)
         elif release_tag.kind == Kind.JS:
-            raise NotImplementedError()
+            return await release_js(release_tag.package, no_dry_run)
         else:
             _assert_never(release_tag.kind)
 
