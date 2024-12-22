@@ -130,6 +130,7 @@ async def release_js(package: str, no_dry_run: bool) -> int:
         "--access",
         "public",
         "--color",
+        "--fail-if-no-match",
         # NOTE: `--no-git-checks` is necessary,
         # because we run publishing on tag, instead of on a branch (i.e. not `main`)
         "--no-git-checks",

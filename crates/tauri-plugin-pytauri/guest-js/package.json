@@ -1,7 +1,13 @@
 {
   "name": "tauri-plugin-pytauri-api",
-  "version": "0.1.0",
-  "description": "",
+  "version": "0.1.0-beta.0",
+  "description": "js api for crate tauri-plugin-pytauri",
+  "license": "Apache-2.0",
+  "repository": "github:WSH032/pytauri",
+  "contributors": [
+    "Sean Wang <126865849+WSH032@users.noreply.github.com>"
+  ],
+  "types": "module",
   "exports": {
     "types": "./dist/index.d.ts",
     "import": "./dist/index.js",
@@ -15,9 +21,6 @@
   "scripts": {
     "build": "rollup -c --configPlugin typescript"
   },
-  "keywords": [],
-  "author": "",
-  "license": "Apache-2.0",
   "dependencies": {
     "@tauri-apps/api": "^2.0.0"
   }
