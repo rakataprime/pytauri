@@ -1,0 +1,20 @@
+[project]
+name = "tauri-app"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.9"
+dependencies = ["pytauri == 0.1.*"]
+
+[project.entry-points.pytauri]
+ext_mod = "tauri_app.ext_mod"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = { where = ["python"] }
+
+
+[tool.uv.sources]
+pytauri = { workspace = true }
