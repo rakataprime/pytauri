@@ -17,6 +17,20 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages]
 find = { where = ["python"] }
 
+# see: <https://www.maturin.rs/config>
+[tool.maturin]
+# the same as [tool.setuptools.packages.find.where]
+python-source = "python"
+# the same as `[project.entry-points.pytauri.ext_mod]`,
+# i.e., `target` in `setup.py`
+module-name = "tauri_app.ext_mod"
+# see `setup.py`
+features = ["pyo3/extension-module", "tauri/custom-protocol"]
+# equivalent to `setuptools_scm`
+sdist-generator = "git"
+# equivalent to `MANIFEST.in`
+include = [{ path = "frontend/**/*", format = "sdist" }]
+
 
 [tool.uv.sources]
 pytauri = { workspace = true }
