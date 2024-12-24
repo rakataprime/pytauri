@@ -1504,11 +1504,17 @@ name = "tauri-app"
 version = "0.1.0"
 source = { editable = "example/tauri-app/src-tauri" }
 dependencies = [
+    { name = "anyio" },
+    { name = "pydantic" },
     { name = "pytauri" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pytauri", editable = "python/pytauri" }]
+requires-dist = [
+    { name = "anyio", specifier = "==4.*" },
+    { name = "pydantic", specifier = "==2.*" },
+    { name = "pytauri", editable = "python/pytauri" },
+]
 
 [[package]]
 name = "tomli"
