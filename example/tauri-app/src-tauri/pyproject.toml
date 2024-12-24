@@ -6,10 +6,12 @@ requires-python = ">=3.9"
 dependencies = ["pytauri == 0.1.*"]
 
 [project.entry-points.pytauri]
+# - "tauri_app" -> `python/tauri_app/`
+# - "ext_mod" -> `#[pyo3(name = "ext_mod")]` in rust
 ext_mod = "tauri_app.ext_mod"
 
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=61", "setuptools-rust==1.*", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages]

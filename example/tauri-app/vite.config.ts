@@ -5,6 +5,10 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
 
+  build: {
+    // build dist into `src-tauri/` so that we can include it in python sdist
+    outDir: "src-tauri/frontend",
+  },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent vite from obscuring rust errors
