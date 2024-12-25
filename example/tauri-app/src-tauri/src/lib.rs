@@ -23,6 +23,9 @@ fn tauri_generate_context() -> tauri::Context {
 mod ext_mod {
     use super::*;
 
+    #[pymodule_export]
+    use pytauri_plugin_notification::notification;
+
     #[pymodule_init]
     fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
         pytauri::pymodule_export(
@@ -31,6 +34,7 @@ mod ext_mod {
             |_args, _kwargs| {
                 let builder = tauri::Builder::default()
                     .plugin(tauri_plugin_opener::init())
+                    .plugin(tauri_plugin_notification::init())
                     .invoke_handler(tauri::generate_handler![greet]);
                 Ok(builder)
             },
