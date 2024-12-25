@@ -71,6 +71,20 @@ members = ["python/*", "example/tauri-app/src-tauri"]
 [tool.pyright]
 typeCheckingMode = "strict"
 pythonVersion = "3.9"
+# see: <https://github.com/microsoft/pyright/blob/1.1.391/docs/configuration.md#environment-options>
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    # 👇 necessary, because when `tauri-cli bundles python,
+    # it will copy `pyembed` to the target directory (i.e., rust output dir).
+    "**/target",
+    # 👆
+    "**/dist",
+    "**/.*",
+    "./.venv",
+    "example/tauri-app/src-tauri/pyembed/",
+    "example/tauri-app/src-tauri/frontend/",
+]
 
 
 [tool.ruff.format]

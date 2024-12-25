@@ -78,4 +78,5 @@ docs/_build/
 # Pyenv
 .python-version
 
-/frontend
+/frontend/
+/pyembed/
