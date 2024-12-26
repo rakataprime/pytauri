@@ -15,6 +15,13 @@ name = "tauri_app_lib"
 # `cdylib` is required for building python extension modules files
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[[bin]]
+# the same as the package name
+name = "tauri-app"
+path = "src/main.rs"
+required-features = ["pytauri/standalone"]
+
+
 [build-dependencies]
 tauri-build = { workspace = true, features = [] }
 
@@ -25,7 +32,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
 pyo3 = { workspace = true }
-pytauri = { workspace = true, features = ["standalone"] }
+pytauri = { workspace = true }
 tauri-plugin-pytauri = { workspace = true }
 tauri-plugin-notification = { workspace = true }
 pytauri-plugin-notification = { workspace = true }
