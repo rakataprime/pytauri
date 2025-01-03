@@ -22,19 +22,12 @@ Source Code: <https://github.com/WSH032/pytauri/>
 
 ---
 
-> [!NOTE]
->
-> WIP: Currently we only support local development.
->
-> Once we publish packages to `PyPi`, `Crates.io`, `npm`, you can use `pytauri` for production.
-
 ## Features
 
 [notification]: https://docs.rs/tauri-plugin-notification/latest/tauri_plugin_notification/
 
-- Need Rust compiler, but **don't need to write Rust code**!
-<!-- TODO, FIXME, XXX: point the links to the documentation instead of the files -->
-- Can be integrated with `tauri-cli` to [build and package standalone executables](./docs/Usage/standalone.md)!
+- Need Rust compiler, but **almost don't need to write Rust code**!
+- Can be integrated with `tauri-cli` to build and package standalone executables!
 - No IPC (inter-process communication) overhead, secure and fast, thanks to [Pyo3]!
 - Support Tauri official plugins(e.g., [notification]), and you can write your own plugins!
 
@@ -44,124 +37,40 @@ Source Code: <https://github.com/WSH032/pytauri/>
 - **100%** [Type Completeness](https://microsoft.github.io/pyright/#/typed-libraries?id=type-completeness)
 - Ergonomic API (and as close as possible to the Tauri Rust API)
 
-    - Python
+## Release
 
-        ```python
-        from pydantic import BaseModel
-        from pytauri import AppHandle, Commands
-        from pytauri_plugin_notification import NotificationExt
+| name | pypi | crates.io | npmjs |
+|:-------:|:----:|:---------:|:-----:|
+| 👉 **core** | - | - | - |
+| pytauri | [![pytauri-pypi-v]][pytauri-pypi] | [![pytauri-crates-v]][pytauri-crates] | |
+| pytauri-core | | [![pytauri-core-crates-v]][pytauri-core-crates] | |
+| tauri-plugin-pytauri | | [![tauri-plugin-pytauri-crates-v]][tauri-plugin-pytauri-crates] | [![tauri-plugin-pytauri-api-npm-v]][tauri-plugin-pytauri-api-npm]
+| 👉 **plugins** | - | - | - |
+| pytauri-plugin-notification | [![pytauri-plugin-notification-pypi-v]][pytauri-plugin-notification-pypi] | [![pytauri-plugin-notification-crates-v]][pytauri-plugin-notification-crates] | |
+| 👉 **utils** | - | - | - |
+| pyo3-utils | [![pyo3-utils-pypi-v]][pyo3-utils-pypi] | [![pyo3-utils-crates-v]][pyo3-utils-crates] | |
+| codelldb | [![codelldb-pypi-v]][codelldb-pypi] | | |
 
-        commands = Commands()
-
-
-        class Person(BaseModel):
-            name: str
-
-
-        class Greeting(BaseModel):
-            message: str
-
-
-        @commands.invoke_handler()
-        async def greet(person: Person, app_handle: AppHandle) -> Greeting:
-            notification_ext = NotificationExt(app_handle)
-            notification = notification_ext.notification()
-            notification.builder().title("Greeting").body(f"Hello, {person.name}!").show()
-
-            return Greeting(message=f"Hello, {person.name}!")
-        ```
-
-    - Frontend
-
-        ```ts
-        import { pyInvoke, fromJson } from "tauri-plugin-pytauri-api";
-
-        export interface Person {
-            name: string;
-        }
-
-        export interface Greeting {
-            message: string;
-        }
-
-        export async function greet(person: Person): Promise<Greeting> {
-            const response = await pyInvoke("greet", person);
-            return fromJson(response);
-        }
-        ```
-
-## Early Access
-
-### Developer Requirements
-
-#### Platforms
-
-- Tier 1: my primary development environment
-    - Windows 10
-- Tier 2: will got bugs fixed and tested
-    - Linux
-- Tier 3: will not be tested, may not work
-    - MacOS
-
-#### Language
-
-- [Python]: >= 3.9
-- [Rust]: The latest stable version
-- [Node.js]: LTS version
-
-[Rust]: https://www.rust-lang.org/tools/install
-[Python]: https://www.python.org/downloads/
-[Node.js]: https://nodejs.org/en/download/package-manager
-
-#### Tools
-
-- [pnpm]: See `package.json`
-- [uv]: The latest version
-
-[pnpm]: https://pnpm.io/installation
-[uv]: https://docs.astral.sh/uv/getting-started/installation/
-
-#### System Dependencies
-
-- [Tauri Prerequisites](https://tauri.app/start/prerequisites/#system-dependencies)
-
-### Install
-
-```bash
-git clone https://github.com/WSH032/pytauri.git
-cd pytauri
-
-pnpm install
-# build frontend assets
-pnpm -r run build
-
-# virtual environment
-uv venv
-source .venv/bin/activate  # bash/zsh
-# or powershell: .venv\Scripts\Activate.ps1
-
-uv pip install setuptools setuptools-rust setuptools-scm
-# install demo
-uv sync \
-    --only-group=example \
-    --no-build-isolation-package=pytauri-demo \
-    --reinstall-package=pytauri-demo
-```
-
-### Usage
-
-```bash
-python -m pytauri_demo
-```
-
-### Example
-
-See `example`
-
-- Backend
-    - Python: `example\python\pytauri_demo\__main__.py`
-    - Rust: `example\src\lib.rs`
-- Frontend: `example\front\src\ipc.tsx`
+[pytauri-pypi-v]: https://img.shields.io/pypi/v/pytauri
+[pytauri-pypi]: https://pypi.org/project/pytauri
+[pytauri-crates-v]: https://img.shields.io/crates/v/pytauri
+[pytauri-crates]: https://crates.io/crates/pytauri
+[pytauri-core-crates-v]: https://img.shields.io/crates/v/pytauri-core
+[pytauri-core-crates]: https://crates.io/crates/pytauri-core
+[tauri-plugin-pytauri-crates-v]: https://img.shields.io/crates/v/tauri-plugin-pytauri
+[tauri-plugin-pytauri-crates]: https://crates.io/crates/tauri-plugin-pytauri
+[tauri-plugin-pytauri-api-npm-v]:https://img.shields.io/npm/v/tauri-plugin-pytauri-api
+[tauri-plugin-pytauri-api-npm]: https://www.npmjs.com/package/tauri-plugin-pytauri-api
+[pytauri-plugin-notification-pypi-v]: https://img.shields.io/pypi/v/pytauri-plugin-notification
+[pytauri-plugin-notification-pypi]: https://pypi.org/project/pytauri-plugin-notification
+[pytauri-plugin-notification-crates-v]: https://img.shields.io/crates/v/pytauri-plugin-notification
+[pytauri-plugin-notification-crates]: https://crates.io/crates/pytauri-plugin-notification
+[pyo3-utils-pypi-v]: https://img.shields.io/pypi/v/pyo3-utils
+[pyo3-utils-pypi]: https://pypi.org/project/pyo3-utils
+[pyo3-utils-crates-v]: https://img.shields.io/crates/v/pyo3-utils
+[pyo3-utils-crates]: https://crates.io/crates/pyo3-utils
+[codelldb-pypi-v]: https://img.shields.io/pypi/v/codelldb
+[codelldb-pypi]: https://pypi.org/project/codelldb
 
 ## Philosophy
 

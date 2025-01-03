@@ -51,12 +51,12 @@ example = [
     "setuptools >= 64",
     "setuptools-scm >= 8",
     "setuptools-rust == 1.*",
-    "pytauri-demo",
+    "tauri-app",
 ]
 
 
 [tool.uv.sources]
-pytauri-demo = { workspace = true }
+tauri-app = { workspace = true }
 codelldb = { workspace = true }
 pyfuture = { workspace = true }
 pyo3-utils = { workspace = true }
@@ -65,12 +65,26 @@ pytauri-plugin-notification = { workspace = true }
 
 # https://docs.astral.sh/uv/concepts/workspaces/
 [tool.uv.workspace]
-members = ["python/*", "example"]
+members = ["python/*", "example/tauri-app/src-tauri"]
 
 
 [tool.pyright]
 typeCheckingMode = "strict"
 pythonVersion = "3.9"
+# see: <https://github.com/microsoft/pyright/blob/1.1.391/docs/configuration.md#environment-options>
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    # 👇 necessary, because when `tauri-cli bundles python,
+    # it will copy `pyembed` to the target directory (i.e., rust output dir).
+    "**/target",
+    # 👆
+    "**/dist",
+    "**/.*",
+    "./.venv",
+    "example/tauri-app/src-tauri/pyembed/",
+    "example/tauri-app/src-tauri/frontend/",
+]
 
 
 [tool.ruff.format]
@@ -133,6 +147,9 @@ ignore = [
     # "SIM108",  # if-else-block-instead-of-if-exp
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"docs_src/**/*.py" = ["D"]
+
 # https://docs.astral.sh/ruff/settings/#pydocstyle
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -142,7 +159,7 @@ convention = "google"
 [tool.coverage.run]
 branch = true
 source = [
-    "pytauri_demo",
+    "tauri_app",
     "codelldb",
     "pyfuture",
     "pyo3_utils",
