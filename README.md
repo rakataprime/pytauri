@@ -24,6 +24,10 @@ Source Code: <https://github.com/WSH032/pytauri/>
 
 ## Features
 
+> **TL;DR**
+>
+> You are hurry and just wanna see/run the demo? See [examples/tauri-app](https://github.com/WSH032/pytauri/tree/main/examples/tauri-app).
+
 [notification]: https://docs.rs/tauri-plugin-notification/latest/tauri_plugin_notification/
 
 - Need Rust compiler, but **almost don't need to write Rust code**!
@@ -36,6 +40,59 @@ Source Code: <https://github.com/WSH032/pytauri/>
 - Natively support async python (`asyncio`, `trio` or `anyio`)
 - **100%** [Type Completeness](https://microsoft.github.io/pyright/#/typed-libraries?id=type-completeness)
 - Ergonomic API (and as close as possible to the Tauri Rust API)
+    - Python
+
+        ```python
+        import sys
+
+        from pydantic import BaseModel
+        from pytauri import (
+            AppHandle,
+            Commands,
+        )
+        from pytauri_plugin_notification import NotificationBuilderArgs, NotificationExt
+
+        commands: Commands = Commands()
+
+
+        class Person(BaseModel):
+            name: str
+
+
+        class Greeting(BaseModel):
+            message: str
+
+
+        @commands.command()
+        async def greet(body: Person, app_handle: AppHandle) -> Greeting:
+            notification_builder = NotificationExt.builder(app_handle)
+            notification_builder.show(
+                NotificationBuilderArgs(title="Greeting", body=f"Hello, {body.name}!")
+            )
+
+            return Greeting(
+                message=f"Hello, {body.name}! You've been greeted from Python {sys.version}!"
+            )
+        ```
+
+    - Frontend
+
+        ```ts
+        import { pyInvoke } from "tauri-plugin-pytauri-api";
+        // or: `const { pyInvoke } = window.__TAURI__.pytauri;`
+
+        export interface Person {
+            name: string;
+        }
+
+        export interface Greeting {
+            message: string;
+        }
+
+        export async function greet(body: Person): Promise<Greeting> {
+            return await pyInvoke("greet", body);
+        }
+        ```
 
 ## Release
 
@@ -44,7 +101,7 @@ Source Code: <https://github.com/WSH032/pytauri/>
 | 👉 **core** | - | - | - |
 | pytauri | [![pytauri-pypi-v]][pytauri-pypi] | [![pytauri-crates-v]][pytauri-crates] | |
 | pytauri-core | | [![pytauri-core-crates-v]][pytauri-core-crates] | |
-| tauri-plugin-pytauri | | [![tauri-plugin-pytauri-crates-v]][tauri-plugin-pytauri-crates] | [![tauri-plugin-pytauri-api-npm-v]][tauri-plugin-pytauri-api-npm]
+| tauri-plugin-pytauri | | [![tauri-plugin-pytauri-crates-v]][tauri-plugin-pytauri-crates] | [![tauri-plugin-pytauri-api-npm-v]][tauri-plugin-pytauri-api-npm] |
 | 👉 **plugins** | - | - | - |
 | pytauri-plugin-notification | [![pytauri-plugin-notification-pypi-v]][pytauri-plugin-notification-pypi] | [![pytauri-plugin-notification-crates-v]][pytauri-plugin-notification-crates] | |
 | 👉 **utils** | - | - | - |

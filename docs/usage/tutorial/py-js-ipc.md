@@ -57,7 +57,7 @@ dependencies = [
 see [concepts/ipc](../concepts/ipc.md) for more information.
 
 ```python title="src-tauri/python/__init__.py"
---8<-- "docs_src/tutorial/command.py"
+--8<-- "docs_src/tutorial/invoke_handler.py:command"
 ```
 
 ### generate invoke handler for app
