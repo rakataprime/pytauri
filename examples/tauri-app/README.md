@@ -1,7 +1,7 @@
 # PyTauri + Vanilla TS
 
 ```bash
-cd example/tauri-app
+cd examples/tauri-app
 ```
 
 and follow the tutorial section in Documentation.

@@ -11,7 +11,7 @@ dev = [
     { include-group = "test" },
     { include-group = "tools" },
     { include-group = "workspaces" },
-    { include-group = "example" },
+    { include-group = "examples" },
 ]
 lint = [
     # `pyright` installed by `pnpm`
@@ -47,7 +47,7 @@ workspaces = [
     "pytauri",
     "pytauri-plugin-notification",
 ]
-example = [
+examples = [
     "setuptools >= 64",
     "setuptools-scm >= 8",
     "setuptools-rust == 1.*",
@@ -65,7 +65,7 @@ pytauri-plugin-notification = { workspace = true }
 
 # https://docs.astral.sh/uv/concepts/workspaces/
 [tool.uv.workspace]
-members = ["python/*", "example/tauri-app/src-tauri"]
+members = ["python/*", "examples/tauri-app/src-tauri"]
 
 
 [tool.pyright]
@@ -82,8 +82,8 @@ exclude = [
     "**/dist",
     "**/.*",
     "./.venv",
-    "example/tauri-app/src-tauri/pyembed/",
-    "example/tauri-app/src-tauri/frontend/",
+    "examples/tauri-app/src-tauri/pyembed/",
+    "examples/tauri-app/src-tauri/frontend/",
 ]
 
 

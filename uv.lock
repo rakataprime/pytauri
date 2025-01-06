@@ -1069,7 +1069,7 @@ docs = [
     { name = "mkdocs-section-index" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
-example = [
+examples = [
     { name = "setuptools" },
     { name = "setuptools-rust" },
     { name = "setuptools-scm" },
@@ -1123,7 +1123,7 @@ dev = [
     { name = "setuptools", specifier = ">=64" },
     { name = "setuptools-rust", specifier = "==1.*" },
     { name = "setuptools-scm", specifier = ">=8" },
-    { name = "tauri-app", editable = "example/tauri-app/src-tauri" },
+    { name = "tauri-app", editable = "examples/tauri-app/src-tauri" },
     { name = "trio", specifier = "==0.27.0" },
     { name = "typos", specifier = "==1.28.2" },
 ]
@@ -1139,11 +1139,11 @@ docs = [
     { name = "mkdocs-section-index", specifier = "==0.3.*" },
     { name = "mkdocstrings", extras = ["python"], specifier = "==0.27.*" },
 ]
-example = [
+examples = [
     { name = "setuptools", specifier = ">=64" },
     { name = "setuptools-rust", specifier = "==1.*" },
     { name = "setuptools-scm", specifier = ">=8" },
-    { name = "tauri-app", editable = "example/tauri-app/src-tauri" },
+    { name = "tauri-app", editable = "examples/tauri-app/src-tauri" },
 ]
 lint = [
     { name = "ruff", specifier = "==0.8.3" },
@@ -1502,7 +1502,7 @@ wheels = [
 [[package]]
 name = "tauri-app"
 version = "0.1.0"
-source = { editable = "example/tauri-app/src-tauri" }
+source = { editable = "examples/tauri-app/src-tauri" }
 dependencies = [
     { name = "anyio" },
     { name = "pydantic" },
