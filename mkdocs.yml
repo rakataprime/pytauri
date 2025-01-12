@@ -190,10 +190,9 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/WSH032/
-  # # TODO: docs versioning
-  # # see: https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/
-  # version:
-  #   provider: mike
+  # see: https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/
+  version:
+    provider: mike
 
 watch:
   - python/
