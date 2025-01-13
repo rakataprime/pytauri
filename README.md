@@ -96,6 +96,10 @@ Source Code: <https://github.com/WSH032/pytauri/>
 
 ## Release
 
+We follow [Semantic Versioning 2.0.0](https://semver.org/).
+
+Rust and its Python bindings, PyTauri core and its plugins will keep the same `MAJOR.MINOR` version number.
+
 | name | pypi | crates.io | npmjs |
 |:-------:|:----:|:---------:|:-----:|
 | 👉 **core** | - | - | - |
