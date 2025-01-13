@@ -30,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # IMPORTANT: mandatory for `mike --push`
+    environment:
+      name: github-pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
