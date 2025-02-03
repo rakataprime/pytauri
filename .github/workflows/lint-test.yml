@@ -7,11 +7,6 @@ name: Lint check and test
 # It is best to avoid direct commits to the main branch, instead make a PR for checks.
 on:
   pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "**.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/dependabot.yml"
   workflow_dispatch:
   # NOTE: set `secrets: inherit` when call this workflow from other workflow.
   workflow_call:
@@ -21,7 +16,29 @@ defaults:
     shell: bash
 
 jobs:
+  # don't use `pull_request.paths`, see: <https://github.com/github/docs/issues/8926#issuecomment-1635678516>
+  changes:
+    runs-on: ubuntu-latest
+    # Required permissions
+    permissions:
+      pull-requests: read
+    outputs:
+      paths: ${{ steps.filter.outputs.paths }}
+    steps:
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        predicate-quantifier: "every"
+        filters: |
+          paths:
+            - "!docs/**"
+            - "!**/*.md"
+            - "!.github/ISSUE_TEMPLATE/**"
+            - "!.github/dependabot.yml"
+
   pre-commit-run:
+    needs: changes
+    if: ${{ !startsWith(github.head_ref, 'releases/') && needs.changes.outputs.paths == 'true'}}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -90,3 +107,16 @@ jobs:
         run: |
           uv run --all-extras \
             -- pre-commit run --show-diff-on-failure --color=always --hook-stage=manual --all-files
+
+  # https://github.com/marketplace/actions/alls-green#why
+  lint-test-all-green: # This job does nothing and is only used for the branch protection
+    if: always() # IMPORTANT: mandatory
+    needs:
+      - pre-commit-run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
+          allowed-skips: "pre-commit-run"
