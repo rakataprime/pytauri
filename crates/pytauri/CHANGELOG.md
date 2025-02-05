@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0]
+
 ### BREAKING
 
 - [#52](https://github.com/WSH032/pytauri/pull/52) - refactor(standalone)!: new API for preparing python interpreter.
@@ -32,4 +34,5 @@
 ## [0.1.0-beta.0]
 
 [unreleased]: https://github.com/WSH032/pytauri/tree/HEAD
+[0.2.0]: https://github.com/WSH032/pytauri/releases/tag/rs/pytauri/v0.2.0
 [0.1.0-beta.0]: https://github.com/WSH032/pytauri/releases/tag/rs/pytauri/v0.1.0-beta.0
