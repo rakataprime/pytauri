@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0]
+
 ### BREAKING
 
 - [#70](https://github.com/WSH032/pytauri/pull/70) - Removed `NotificationBuilderArgs`.
@@ -47,4 +49,5 @@
 ## [0.1.0-beta.0]
 
 [unreleased]: https://github.com/WSH032/pytauri/tree/HEAD
+[0.2.0]: https://github.com/WSH032/pytauri/releases/tag/py/pytauri-plugin-notification/v0.2.0
 [0.1.0-beta.0]: https://github.com/WSH032/pytauri/releases/tag/py/pytauri-plugin-notification/v0.1.0-beta.0
