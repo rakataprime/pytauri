@@ -33,9 +33,11 @@ Add the rust dependency:
 
 ```bash
 cd src-tauri
-cargo add pytauri-plugin-notification@0.1.0-beta.0
+cargo add pytauri-plugin-notification@0.2  # (1)!
 cd ..
 ```
+
+1. This is the version at the time of writing this tutorial. There may be a newer version of pytauri available when you use it.
 
 ref to <https://pyo3.rs/v0.23.3/module.html> to export the pyo3 bindings:
 
@@ -65,9 +67,11 @@ Add the python dependency:
 # ...
 dependencies = [
     # ...
-    "pytauri-plugin-notification == 0.1.*",
+    "pytauri-plugin-notification == 0.2.*",  # (1)!
 ]
 ```
+
+1. This is the version at the time of writing this tutorial. There may be a newer version of pytauri available when you use it.
 
 !!! tip
     After adding dependencies, you need to use commands like `uv sync` or `uv pip install` to synchronize your dependency environment.

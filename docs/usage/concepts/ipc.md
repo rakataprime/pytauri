@@ -1,8 +1,12 @@
 # IPC Commands
 
-ref:
+Ref:
 
-- [pytauri.ipc.Commands][]
+- <https://tauri.app/develop/calling-frontend/>
 - <https://tauri.app/develop/calling-rust/>
+- [pytauri.ipc.Commands][]
+- [pytauri.ipc.JavaScriptChannelId][] and [pytauri.ipc.Channel][]
+- [pytauri.webview.WebviewWindow.eval][]
+- [pytauri.Listener][]
 
-TODO
+TODO: details

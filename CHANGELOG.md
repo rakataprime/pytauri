@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0]
+
 ### BREAKING
 
 - [#70](https://github.com/WSH032/pytauri/pull/70) - feat(notification): removed `NotificationBuilderArgs`.
@@ -61,4 +63,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0-beta]
 
 [unreleased]: https://github.com/WSH032/pytauri/tree/HEAD
+[0.2.0]: https://github.com/WSH032/pytauri/releases/tag/v0.2.0
 [0.1.0-beta]: https://github.com/WSH032/pytauri/releases/tag/v0.1.0-beta

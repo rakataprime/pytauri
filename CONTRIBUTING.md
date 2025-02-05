@@ -156,8 +156,9 @@ please refer to `.github/workflows/docs.yml`.
 - Every push to the `main` branch will trigger the `dev` version docs deployment.
 - Every `v*` semver tag will trigger the corresponding version docs deployment.
 
-    !!! note
-        Remember make a Github Release (not package release) for the version docs deployment.
+    !!! warning
+        - Remember update `CHANGELOG.md` before pushing the version docs tag!
+        - Remember make a Github Release (not package release) manually for the version docs deployment!
 
 ## PR Checks
 
