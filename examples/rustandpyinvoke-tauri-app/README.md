@@ -8,10 +8,10 @@ We're encountering persistent issues with Python-Rust interop in our Pytauri int
 
 ```bash
 # Environment versions (please fill in your versions)
-Python: 3.11.x
-Rust: x.xx.x
-Node: xx.x.x
-OS: Linux 6.6.58-1-lts
+Python: 3.10.x
+Rust: 1.84.1
+Node: v18.20.6
+OS: Linux 6.6.58-1-lts (arch)
 ```
 
 ### Dependencies
@@ -36,9 +36,8 @@ uv venv
 source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
 uv pip install --reinstall -e src-tauri
 
-# 3. Run via Python
-python -m tauri_app
-```
+# 3. Run via Tauri
+RUST_BACKTRACE=1 RUST_LOG=debug VIRTUAL_ENV=$(pwd)/src-tauri/.venv pnpm tauri dev```
 
 ### Rust Launch Method
 We're also trying to launch directly from Rust. Key initialization code:
@@ -173,52 +172,7 @@ async def greet(body: Dict[str, Any]) -> bytes:
 ## Debug Information
 
 ### Logs
-```
-# Please attach your logs here when reporting
-# Include logs from both Python and Rust launch attempts
-```
-
-### Relevant Files
-Please check these files match your implementation:
-- `src-tauri/python/tauri_app/__init__.py`
-- `src-tauri/src/main.rs` (especially the initialization code)
-- `src-tauri/src/lib.rs`
-
-## How to Reproduce
-
-1. Set up environment:
-   ```bash
-   export RUST_LOG=debug
-   export PYTHONVERBOSE=1
-   ```
-
-2. Run the application (try both methods):
-   ```bash
-   # Method 1: Python launch
-   python -m tauri_app
-
-   # Method 2: Rust launch
-   cargo run
-   ```
-
-3. Attempt to use the greet command from the UI
-
-## Questions for Maintainers
-
-1. Is our GIL management approach in the async wrapper correct?
-2. Should we be using a different executor configuration?
-3. Are there known issues with portal initialization timing?
-4. Are there recommended patterns for command registration in async contexts?
-5. Are there different considerations for Python vs Rust launch methods?
-6. Should the interpreter lifecycle management differ between launch methods?
-
-## References
-
-- [Pytauri Documentation](https://github.com/WSH032/pytauri)
-- [Tauri Plugin Python Documentation](https://github.com/WSH032/pytauri/tree/main/crates/tauri-plugin-pytauri)
-- [PyO3 GIL Management Guide](https://pyo3.rs/v0.20.0/python_from_rust.html#gil-management) 
-
-## Logs
+```bash
 2025-02-19T20:50:06Z DEBUG tauri_app] Running in dev mode
 [2025-02-19T20:50:06Z INFO  tauri_app] Using virtual environment at: /home/Documents/thumper/crew/tr/pytauri/examples/rustandpyinvoke-tauri-app/src-tauri/.venv
 [2025-02-19T20:50:06Z INFO  tauri_app] Setting up Python interpreter...
@@ -343,4 +297,44 @@ stack backtrace:
              at /home//.cargo/registry/src/index.crates.io-6f17d22bba15001f/tokio-1.43.0/src/runtime/blocking/pool.rs:511:17
   53: tokio::runtime::blocking::pool::Spawner::spawn_thread::{{closure}}
              at /home//.cargo/registry/src/index.crates.io-6f17d22bba15001f/tokio-1.43.0/src/runtime/blocking/pool.rs:469:13
-note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.```
+
+### Relevant Files
+Please check these files match your implementation:
+- `src-tauri/python/tauri_app/__init__.py`
+- `src-tauri/src/main.rs` (especially the initialization code)
+- `src-tauri/src/lib.rs`
+
+## How to Reproduce
+
+1. Set up environment:
+   ```bash
+   export RUST_LOG=debug
+   export PYTHONVERBOSE=1
+   ```
+
+2. Run the application (try both methods):
+   ```bash
+   # Method 1: Python launch
+   python -m tauri_app
+
+   # Method 2: Rust launch
+   cargo run
+   ```
+
+3. Attempt to use the greet command from the UI
+
+## Questions for Maintainers
+
+1. Is our GIL management approach in the async wrapper correct?
+2. Should we be using a different executor configuration?
+3. Are there known issues with portal initialization timing?
+4. Are there recommended patterns for command registration in async contexts?
+5. Are there different considerations for Python vs Rust launch methods?
+6. Should the interpreter lifecycle management differ between launch methods?
+
+## References
+
+- [Pytauri Documentation](https://github.com/WSH032/pytauri)
+- [Tauri Plugin Python Documentation](https://github.com/WSH032/pytauri/tree/main/crates/tauri-plugin-pytauri)
+- [PyO3 GIL Management Guide](https://pyo3.rs/v0.20.0/python_from_rust.html#gil-management) 
