@@ -1,0 +1,54 @@
+[workspace]
+preview = ["pixi-build"]  # Required for source dependencies
+name = "tauri-app"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = [ "linux-64",
+#  "osx-arm64", 
+ "win-64"]
+channel-priority = "strict"
+
+[environments]
+default = []
+
+[package.build]
+additional-dependencies = { git = "*" }
+backend = { name = "pixi-build-python", version = "0.1.*" }
+channels = [
+  "https://prefix.dev/pixi-build-backends",
+  "https://prefix.dev/conda-forge",
+]
+
+[dependencies]
+python = "3.12.*"
+pip = "*"
+numpy = ">1.26"
+
+# pytauri = { git = "https://github.com/WSH032/pytauri", branch = "main" }
+
+# pytauri = { git = "https://gi/thub.com/WSH032/pytauri", subdirectory ="python/pytauri", branch = "main" }
+# pytauri = { git = "https://github.com/WSH032/pytauri/tree/main/python/pytauri", rev = "main" }
+# pytauri = { git = "https://gi/thub.com/WSH032/pytauri", subdirectory = "pytauri", branch = "main" }
+[tool.pixi.pypi-dependencies]  
+anyio = ">=4.0.0"
+pydantic = ">=2.0"
+sniffio = "*"
+typing-extensions = "*"
+
+# pytauri = "*"
+pytauri-plugin-notification="*"
+pytauri = { git = "https://github.com/WSH032/pytauri.git", branch = "main" ,  editable = true}
+
+[pypi-dependencies]
+pytauri = ">=0.2.0, <0.3"
+pytauri-plugin-notification = ">=0.2.0, <0.3"
+# pytauri = { 
+#     git = "https://github.com/WSH032/pytauri.git", 
+#     branch = "main",
+#     subdirectory = "python/pytauri",
+#     editable = true  # Recommended for developments
+# }
+
+# pytauri = { git = "https://github.com/WSH032/pytauri.git", subdirectory = "python/pytauri", branch = "main" }
+# pytauri-plugin-notification = { git = "https://github.com/WSH032/pytauri.git", subdirectory = "python/pytauri-plugin-notification", branch = "main" }
+
