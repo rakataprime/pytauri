@@ -315,11 +315,7 @@ Please check these files match your implementation:
 
 2. Run the application (try both methods):
    ```bash
-   # Method 1: Python launch
-   python -m tauri_app
-
-   # Method 2: Rust launch
-   cargo run
+RUST_BACKTRACE=1 RUST_LOG=debug VIRTUAL_ENV=$(pwd)/src-tauri/.venv pnpm tauri dev```
    ```
 
 3. Attempt to use the greet command from the UI
