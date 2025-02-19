@@ -130,8 +130,23 @@ def greet(body: Dict[str, Any]) -> bytes:
     request = GreetRequest.parse_obj(body or {})
 ```
 **Result**: Data validation works but GIL issues persist
+### Current __init__.py implementation
+```python 
+@commands.command()
+async def greet(
+    body: Person,
+    app_handle: AppHandle,
+) -> Greeting:
+    """Greet a person."""
+    try:
+        name = body.name or "World"
+        return Greeting(f"Hello, {name}! You've been greeted from Python {sys.version}!")
+    except Exception as e:
+        logger.error("Error in greet", exc_info=True)
+        return Greeting(f"Error occurred: {str(e)}")
+```
+#### Other Implementations
 
-#### Current Implementation
 ```python
 def sync_greet(body: Dict[str, Any]) -> bytes:
     """Synchronous part that runs with GIL held"""
